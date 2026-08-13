@@ -1,6 +1,10 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 
+def personalKeystorePath = System.getenv('PREC_KEYSTORE_PATH')
+def personalKeystorePassword = System.getenv('PREC_KEYSTORE_PASSWORD')
+def hasPersonalSigning = personalKeystorePath && personalKeystorePassword
+
 android {
     namespace = "com.jonadan514.myplanner"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -8,8 +12,8 @@ android {
         applicationId "com.jonadan514.myplanner"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -17,7 +21,23 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasPersonalSigning) {
+            personal {
+                storeFile file(personalKeystorePath)
+                storePassword personalKeystorePassword
+                keyAlias 'prec'
+                keyPassword personalKeystorePassword
+                storeType 'PKCS12'
+            }
+        }
+    }
     buildTypes {
+        debug {
+            if (hasPersonalSigning) {
+                signingConfig signingConfigs.personal
+            }
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

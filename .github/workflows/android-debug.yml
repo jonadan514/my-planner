@@ -6,12 +6,9 @@ on:
     branches: [main]
     paths:
       - 'android/**'
-      - 'src/**'
-      - 'public/**'
       - 'capacitor.config.ts'
       - 'package.json'
       - 'package-lock.json'
-      - 'vite.config.ts'
       - '.github/workflows/android-debug.yml'
 
 permissions:
@@ -35,13 +32,25 @@ jobs:
         run: npm ci
       - name: Sync web app to Android
         run: npm run android:sync
+      - name: Prepare stable signing key
+        env:
+          PREC_KEYSTORE_BASE64: ${{ secrets.PREC_KEYSTORE_BASE64 }}
+          PREC_KEYSTORE_PASSWORD: ${{ secrets.PREC_KEYSTORE_PASSWORD }}
+        run: |
+          test -n "$PREC_KEYSTORE_BASE64"
+          test -n "$PREC_KEYSTORE_PASSWORD"
+          echo "$PREC_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/prec-signing.p12"
+          echo "PREC_KEYSTORE_PATH=$RUNNER_TEMP/prec-signing.p12" >> "$GITHUB_ENV"
+          echo "PREC_KEYSTORE_PASSWORD=$PREC_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
       - name: Make Gradle wrapper executable
         run: chmod +x android/gradlew
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
+      - name: Name APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Prec-1.1.0.apk
       - uses: actions/upload-artifact@v4
         with:
           name: prec-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: Prec-1.1.0.apk
           if-no-files-found: error
