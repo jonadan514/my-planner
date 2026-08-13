@@ -1,0 +1,266 @@
+import { useState, useEffect, useCallback } from 'react'
+import { db } from '../db/database'
+import type { WorkoutEntry } from '../db/database'
+import { format, parseISO } from 'date-fns'
+import { ko } from 'date-fns/locale'
+
+const CATEGORIES = ['가슴', '등', '하체', '어깨', '팔', '유산소', '기타']
+
+type WorkoutType = 'weight' | 'cardio'
+
+interface DayGroup {
+  date: string
+  entries: WorkoutEntry[]
+}
+
+function groupByDate(entries: WorkoutEntry[]): DayGroup[] {
+  const map = new Map<string, WorkoutEntry[]>()
+  for (const e of entries) {
+    const arr = map.get(e.date) ?? []
+    arr.push(e)
+    map.set(e.date, arr)
+  }
+  return [...map.entries()]
+    .map(([date, entries]) => ({ date, entries }))
+    .sort((a, b) => b.date.localeCompare(a.date))
+}
+
+export default function WorkoutTab() {
+  const [groups, setGroups]           = useState<DayGroup[]>([])
+  const [showForm, setShowForm]       = useState(false)
+  const [wType, setWType]             = useState<WorkoutType>('weight')
+  const [date, setDate]               = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [name, setName]               = useState('')
+  const [category, setCategory]       = useState('가슴')
+  const [sets, setSets]               = useState('')
+  const [reps, setReps]               = useState('')
+  const [weight, setWeight]           = useState('')
+  const [duration, setDuration]       = useState('')
+  const [distance, setDistance]       = useState('')
+  const [memo, setMemo]               = useState('')
+
+  const load = useCallback(async () => {
+    const all = await db.workoutLogs.orderBy('createdAt').reverse().toArray()
+    setGroups(groupByDate(all))
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const resetForm = () => {
+    setName(''); setSets(''); setReps(''); setWeight('')
+    setDuration(''); setDistance(''); setMemo('')
+    setCategory('가슴'); setWType('weight')
+    setDate(format(new Date(), 'yyyy-MM-dd'))
+  }
+
+  const save = async () => {
+    if (!name.trim()) return
+    const entry: WorkoutEntry = {
+      date,
+      name: name.trim(),
+      category,
+      createdAt: Date.now(),
+      ...(wType === 'weight' ? {
+        sets:   sets   ? Number(sets)   : undefined,
+        reps:   reps   ? Number(reps)   : undefined,
+        weight: weight ? Number(weight) : undefined,
+      } : {
+        duration: duration ? Number(duration) : undefined,
+        distance: distance ? Number(distance) : undefined,
+      }),
+      memo: memo.trim() || undefined,
+    }
+    await db.workoutLogs.add(entry)
+    resetForm()
+    setShowForm(false)
+    load()
+  }
+
+  const del = async (id: number) => {
+    await db.workoutLogs.delete(id)
+    load()
+  }
+
+  return (
+    <div className="px-4 pt-3 pb-4">
+      {/* 추가 버튼 */}
+      <button
+        onClick={() => setShowForm(v => !v)}
+        className="w-full py-3 rounded-2xl bg-indigo-500 text-white font-semibold text-sm mb-5 active:bg-indigo-600"
+      >
+        + 운동 기록 추가
+      </button>
+
+      {/* 입력 폼 */}
+      {showForm && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 mb-5 space-y-3">
+          {/* 날짜 */}
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">날짜</label>
+            <input
+              type="date"
+              className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-gray-900 outline-none text-sm"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+            />
+          </div>
+
+          {/* 웨이트 / 유산소 토글 */}
+          <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+            {(['weight', 'cardio'] as WorkoutType[]).map(t => (
+              <button
+                key={t}
+                onClick={() => { setWType(t); setCategory(t === 'cardio' ? '유산소' : '가슴') }}
+                className={`flex-1 py-2 text-xs rounded-lg font-medium transition-colors ${
+                  wType === t ? 'bg-indigo-500 text-white' : 'text-gray-400'
+                }`}
+              >
+                {t === 'weight' ? '웨이트' : '유산소'}
+              </button>
+            ))}
+          </div>
+
+          {/* 카테고리 */}
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1.5 block">부위 / 종류</label>
+            <div className="flex flex-wrap gap-1.5">
+              {(wType === 'cardio' ? ['유산소'] : CATEGORIES.filter(c => c !== '유산소')).map(c => (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    category === c ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 운동명 */}
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">운동명</label>
+            <input
+              type="text"
+              placeholder={wType === 'weight' ? '벤치프레스, 스쿼트 ...' : '러닝, 사이클 ...'}
+              className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none text-sm"
+              value={name}
+              onChange={e => setName(e.target.value)}
+            />
+          </div>
+
+          {/* 웨이트 필드 */}
+          {wType === 'weight' && (
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="text-[11px] text-gray-400 mb-1 block">세트</label>
+                <input type="number" inputMode="numeric" placeholder="—"
+                  className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none text-sm text-center"
+                  value={sets} onChange={e => setSets(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-[11px] text-gray-400 mb-1 block">횟수</label>
+                <input type="number" inputMode="numeric" placeholder="—"
+                  className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none text-sm text-center"
+                  value={reps} onChange={e => setReps(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-[11px] text-gray-400 mb-1 block">무게 (kg)</label>
+                <input type="number" inputMode="decimal" placeholder="—"
+                  className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none text-sm text-center"
+                  value={weight} onChange={e => setWeight(e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          {/* 유산소 필드 */}
+          {wType === 'cardio' && (
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[11px] text-gray-400 mb-1 block">시간 (분)</label>
+                <input type="number" inputMode="numeric" placeholder="—"
+                  className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none text-sm text-center"
+                  value={duration} onChange={e => setDuration(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-[11px] text-gray-400 mb-1 block">거리 (km)</label>
+                <input type="number" inputMode="decimal" placeholder="—"
+                  className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none text-sm text-center"
+                  value={distance} onChange={e => setDistance(e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          {/* 메모 */}
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">메모 (선택)</label>
+            <input type="text" placeholder="기록하고 싶은 내용..."
+              className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none text-sm"
+              value={memo} onChange={e => setMemo(e.target.value)} />
+          </div>
+
+          {/* 저장/취소 */}
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => { resetForm(); setShowForm(false) }}
+              className="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-500 text-sm font-medium"
+            >
+              취소
+            </button>
+            <button
+              onClick={save}
+              className="flex-1 py-2.5 rounded-xl bg-indigo-500 text-white text-sm font-semibold active:bg-indigo-600"
+            >
+              저장
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 기록 목록 */}
+      {groups.length === 0 ? (
+        <p className="text-center text-gray-300 text-sm mt-8">아직 운동 기록이 없어요</p>
+      ) : (
+        <div className="space-y-5">
+          {groups.map(({ date, entries }) => (
+            <div key={date}>
+              <p className="text-xs text-gray-400 font-medium mb-2">
+                {format(parseISO(date), 'M월 d일 (EEE)', { locale: ko })}
+              </p>
+              <ul className="space-y-2">
+                {entries.map(e => (
+                  <li
+                    key={e.id}
+                    className="bg-white border border-gray-100 rounded-xl px-3.5 py-3 flex items-center gap-3"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[10px] bg-indigo-500/15 text-indigo-500 px-2 py-0.5 rounded-md shrink-0">
+                          {e.category}
+                        </span>
+                        <span className="text-sm text-gray-900 font-medium truncate">{e.name}</span>
+                      </div>
+                      <p className="text-[11px] text-gray-400">
+                        {e.sets != null && `${e.sets}세트`}
+                        {e.reps != null && ` × ${e.reps}회`}
+                        {e.weight != null && ` · ${e.weight}kg`}
+                        {e.duration != null && `${e.duration}분`}
+                        {e.distance != null && ` · ${e.distance}km`}
+                        {e.memo && ` — ${e.memo}`}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => e.id && del(e.id)}
+                      className="text-gray-300 text-lg active:text-red-400 shrink-0"
+                    >×</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
