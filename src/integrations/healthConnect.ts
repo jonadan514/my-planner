@@ -1,8 +1,9 @@
 import { format } from 'date-fns'
+import { Capacitor, registerPlugin } from '@capacitor/core'
 import { db } from '../db/database'
 import type { HealthDataType, HealthRecord, HealthSyncStatus } from '../db/database'
 
-const DATA_TYPES: HealthDataType[] = ['EXERCISE', 'STEPS', 'SLEEP', 'WEIGHT', 'BODY_FAT']
+const DATA_TYPES: HealthDataType[] = ['EXERCISE']
 
 interface BridgeStatus {
   available: boolean
@@ -16,13 +17,15 @@ interface ReadResult {
 
 interface HealthConnectBridge {
   getStatus(): Promise<BridgeStatus>
-  requestReadPermissions(dataTypes: HealthDataType[]): Promise<BridgeStatus>
+  requestReadPermissions(input: { dataTypes: HealthDataType[] }): Promise<BridgeStatus>
   readRecords(input: {
     dataTypes: HealthDataType[]
     startTime: string
     changeTokens?: Partial<Record<HealthDataType, string>>
   }): Promise<ReadResult>
 }
+
+const capacitorHealthConnectBridge = registerPlugin<HealthConnectBridge>('HealthConnectBridge')
 
 declare global {
   interface Window {
@@ -31,17 +34,24 @@ declare global {
 }
 
 export function hasNativeHealthConnectBridge(): boolean {
-  return typeof window !== 'undefined' && window.HealthConnectBridge != null
+  return (typeof window !== 'undefined' && window.HealthConnectBridge != null) || Capacitor.isNativePlatform()
+}
+
+function getNativeHealthConnectBridge(): HealthConnectBridge | undefined {
+  if (typeof window !== 'undefined' && window.HealthConnectBridge) return window.HealthConnectBridge
+  return Capacitor.isNativePlatform() ? capacitorHealthConnectBridge : undefined
 }
 
 export async function getHealthConnectStatus(): Promise<{
   status: HealthSyncStatus
   grantedDataTypes: HealthDataType[]
   lastSuccessfulSyncAt?: string
+  errorCode?: string
 }> {
-  if (!hasNativeHealthConnectBridge()) return { status: 'UNAVAILABLE', grantedDataTypes: [] }
+  const bridge = getNativeHealthConnectBridge()
+  if (!bridge) return { status: 'UNAVAILABLE', grantedDataTypes: [] }
   const [nativeStatus, syncStates] = await Promise.all([
-    window.HealthConnectBridge!.getStatus(),
+    bridge.getStatus(),
     db.healthSyncStates.toArray(),
   ])
   const lastSuccessfulSyncAt = syncStates
@@ -49,12 +59,27 @@ export async function getHealthConnectStatus(): Promise<{
     .filter((value): value is string => value != null)
     .sort()
     .at(-1)
+  if (!nativeStatus.available) return { status: 'UNAVAILABLE', grantedDataTypes: [] }
+  if (nativeStatus.grantedDataTypes.length === 0) {
+    return { status: 'PERMISSION_REQUIRED', grantedDataTypes: [] }
+  }
+
+  const grantedStates = syncStates.filter(state => nativeStatus.grantedDataTypes.includes(state.dataType))
+  const errors = grantedStates.filter(state => state.status === 'ERROR')
+  const status: HealthSyncStatus = grantedStates.some(state => state.status === 'SYNCING')
+    ? 'SYNCING'
+    : errors.length === grantedStates.length && errors.length > 0
+      ? 'ERROR'
+      : errors.length > 0
+        ? 'PARTIAL'
+        : grantedStates.length > 0 && grantedStates.every(state => state.status === 'SUCCESS')
+          ? 'SUCCESS'
+          : 'IDLE'
   return {
-    status: nativeStatus.available
-      ? nativeStatus.grantedDataTypes.length > 0 ? 'IDLE' : 'PERMISSION_REQUIRED'
-      : 'UNAVAILABLE',
+    status,
     grantedDataTypes: nativeStatus.grantedDataTypes,
     lastSuccessfulSyncAt,
+    errorCode: errors[0]?.errorCode,
   }
 }
 
@@ -100,11 +125,11 @@ async function saveImportedRecord(record: Omit<HealthRecord, 'id' | 'createdAt' 
 }
 
 export async function syncHealthConnect(requestPermissions = false) {
-  if (!hasNativeHealthConnectBridge()) return getHealthConnectStatus()
-  const bridge = window.HealthConnectBridge!
+  const bridge = getNativeHealthConnectBridge()
+  if (!bridge) return getHealthConnectStatus()
   let nativeStatus = await bridge.getStatus()
   if (requestPermissions && nativeStatus.grantedDataTypes.length < DATA_TYPES.length) {
-    nativeStatus = await bridge.requestReadPermissions(DATA_TYPES)
+    nativeStatus = await bridge.requestReadPermissions({ dataTypes: DATA_TYPES })
   }
   if (nativeStatus.grantedDataTypes.length === 0) return getHealthConnectStatus()
 
@@ -127,6 +152,7 @@ export async function syncHealthConnect(requestPermissions = false) {
       changeToken: result.changeTokens?.[dataType],
       updatedAt: Date.now(),
     })))
+    window.dispatchEvent(new CustomEvent('health-connect-synced'))
   } catch (error) {
     const errorCode = error instanceof Error ? error.message : 'UNKNOWN'
     await Promise.all(nativeStatus.grantedDataTypes.map(dataType => db.healthSyncStates.put({

@@ -141,16 +141,26 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
     setTargets(nutritionTargets ?? null)
     setMealSummary(summary)
     setFastingInterval(latestFasting)
+    const exerciseMinutes = workouts.reduce((total, workout) => total + (workout.duration ?? 0), 0)
+    const exerciseComplete = nutritionTargets?.exerciseMinutes != null
+      ? exerciseMinutes >= nutritionTargets.exerciseMinutes
+      : workouts.length > 0
+    const exerciseSource = workouts.some(workout => workout.origin === 'HEALTH_CONNECT')
+      ? 'HEALTH_CONNECT' as const
+      : 'MANUAL' as const
     if (existing) {
       setLogId(existing.id)
-      setBehaviors({ ...DEFAULT_BEHAVIORS, ...existing.behaviors })
+      setBehaviors({
+        ...DEFAULT_BEHAVIORS,
+        ...existing.behaviors,
+        ...(exerciseComplete ? { exercise: true } : {}),
+      })
       setMemo(existing.memo ?? '')
-      setBehaviorSources(existing.behaviorSources ?? {})
+      setBehaviorSources({
+        ...existing.behaviorSources,
+        ...(exerciseComplete ? { exercise: exerciseSource } : {}),
+      })
     } else {
-      const exerciseMinutes = workouts.reduce((total, workout) => total + (workout.duration ?? 0), 0)
-      const exerciseComplete = nutritionTargets?.exerciseMinutes != null
-        ? exerciseMinutes >= nutritionTargets.exerciseMinutes
-        : workouts.length > 0
       setBehaviors(previous => ({
         ...previous,
         protein: summary?.proteinGoalMet ?? false,
@@ -161,13 +171,18 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
       }))
       setBehaviorSources({
         protein: 'MEAL_LOG', carbs: 'MEAL_LOG', vegetables: 'MEAL_LOG', fasting: 'MEAL_LOG',
-        ...(exerciseComplete ? { exercise: 'MANUAL' as const } : {}),
+        ...(exerciseComplete ? { exercise: exerciseSource } : {}),
       })
     }
     setLoading(false)
   }, [todayStr])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    load()
+    const reloadAfterHealthSync = () => load()
+    window.addEventListener('health-connect-synced', reloadAfterHealthSync)
+    return () => window.removeEventListener('health-connect-synced', reloadAfterHealthSync)
+  }, [load])
 
   const saveConfig = async () => {
     if (!editCycleStart) return

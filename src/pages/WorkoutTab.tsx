@@ -236,8 +236,8 @@ export default function WorkoutTab() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[10px] bg-indigo-500/15 text-indigo-500 px-2 py-0.5 rounded-md shrink-0">
-                          {e.category}
+                        <span className={`text-[10px] px-2 py-0.5 rounded-md shrink-0 ${e.origin === 'HEALTH_CONNECT' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-500/15 text-indigo-500'}`}>
+                          {e.origin === 'HEALTH_CONNECT' ? 'Samsung Health' : e.category}
                         </span>
                         <span className="text-sm text-gray-900 font-medium truncate">{e.name}</span>
                       </div>
@@ -245,15 +245,17 @@ export default function WorkoutTab() {
                         {e.sets != null && `${e.sets}세트`}
                         {e.reps != null && ` × ${e.reps}회`}
                         {e.weight != null && ` · ${e.weight}kg`}
-                        {e.duration != null && `${e.duration}분`}
-                        {e.distance != null && ` · ${e.distance}km`}
+                        {e.duration != null && `${Math.round(e.duration)}분`}
+                        {e.distance != null && ` · ${e.distance.toFixed(2)}km`}
+                        {e.caloriesKcal != null && ` · ${Math.round(e.caloriesKcal)}kcal`}
+                        {e.averageHeartRate != null && ` · 평균 ${Math.round(e.averageHeartRate)}bpm`}
                         {e.memo && ` — ${e.memo}`}
                       </p>
                     </div>
-                    <button
+                    {e.origin !== 'HEALTH_CONNECT' && <button
                       onClick={() => e.id && del(e.id)}
                       className="text-gray-300 text-lg active:text-red-400 shrink-0"
-                    >×</button>
+                    >×</button>}
                   </li>
                 ))}
               </ul>
