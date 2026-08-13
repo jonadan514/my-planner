@@ -47,7 +47,7 @@ export default function HealthConnectCard() {
   if (state.status === 'UNAVAILABLE') {
     const unavailableMessage = hasNativeHealthConnectBridge()
       ? '이 기기에서 Health Connect를 찾지 못했습니다. Android 설정에서 Health Connect를 설치하거나 업데이트한 뒤 다시 실행해 주세요.'
-      : '브라우저에서는 건강 데이터에 접근할 수 없습니다. My Planner Android 앱을 설치하면 삼성헬스 운동기록을 연결할 수 있습니다.'
+      : '브라우저에서는 건강 데이터에 접근할 수 없습니다. Prec Android 앱을 설치하면 삼성헬스 운동기록을 연결할 수 있습니다.'
     return (
       <div className="bg-white border border-gray-100 rounded-2xl p-4">
         <div className="flex items-center justify-between"><p className="text-sm font-semibold text-gray-900">Health Connect</p><span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-1 rounded-lg">사용 불가</span></div>
