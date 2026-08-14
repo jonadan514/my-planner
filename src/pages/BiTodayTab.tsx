@@ -5,6 +5,7 @@ import type { DailyBehavior, ShiftType, DailyMealSummary, UserNutritionTargets }
 import NutritionTargetsSheet from '../components/NutritionTargetsSheet'
 import { fastingBandLabel, getLatestCompletedFastingInterval, STATUS_LABELS } from '../utils/nutrition'
 import type { FastingInterval } from '../utils/nutrition'
+import { getDailyExerciseProgress } from '../utils/exercise'
 import HealthConnectCard from '../components/HealthConnectCard'
 
 const SHIFT_PATTERN: ShiftType[] = [
@@ -119,6 +120,8 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
   const [targets, setTargets] = useState<UserNutritionTargets | null>(null)
   const [showTargets, setShowTargets] = useState(false)
   const [fastingInterval, setFastingInterval] = useState<FastingInterval | null>(null)
+  const [exerciseProgress, setExerciseProgress] = useState(() => getDailyExerciseProgress([], undefined))
+  const [exerciseWorkoutCount, setExerciseWorkoutCount] = useState(0)
   const [behaviorSources, setBehaviorSources] = useState<Partial<Record<keyof DailyBehavior, 'MANUAL' | 'MEAL_LOG' | 'HEALTH_CONNECT'>>>({})
 
   const load = useCallback(async () => {
@@ -141,10 +144,10 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
     setTargets(nutritionTargets ?? null)
     setMealSummary(summary)
     setFastingInterval(latestFasting)
-    const exerciseMinutes = workouts.reduce((total, workout) => total + (workout.duration ?? 0), 0)
-    const exerciseComplete = nutritionTargets?.exerciseMinutes != null
-      ? exerciseMinutes >= nutritionTargets.exerciseMinutes
-      : workouts.length > 0
+    const nextExerciseProgress = getDailyExerciseProgress(workouts, nutritionTargets?.exerciseMinutes)
+    const exerciseComplete = nextExerciseProgress.complete
+    setExerciseProgress(nextExerciseProgress)
+    setExerciseWorkoutCount(workouts.length)
     const exerciseSource = workouts.some(workout => workout.origin === 'HEALTH_CONNECT')
       ? 'HEALTH_CONNECT' as const
       : 'MANUAL' as const
@@ -400,6 +403,29 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
           </div>
         </div>
       )}
+
+      <div className="bg-white border border-gray-100 rounded-2xl p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-gray-900">오늘 운동</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900">{exerciseProgress.displayMinutes}분</p>
+          </div>
+          <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+            exerciseProgress.complete ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'
+          }`}>
+            {exerciseProgress.complete ? '완료' : '진행 중'}
+          </span>
+        </div>
+        <p className="mt-2 text-[11px] text-gray-400">
+          {exerciseWorkoutCount > 0 ? `${exerciseWorkoutCount}개 운동 기록` : '오늘 운동 기록 없음'}
+          {exerciseProgress.targetMinutes != null ? ` · 완료 기준 ${exerciseProgress.targetMinutes}분` : ' · 운동 기록이 있으면 완료'}
+        </p>
+        {exerciseWorkoutCount > 0 && !exerciseProgress.complete && exerciseProgress.targetMinutes != null && (
+          <p className="mt-1 text-[10px] text-amber-500">
+            목표까지 {Math.max(0, exerciseProgress.targetMinutes - exerciseProgress.displayMinutes)}분 남았습니다.
+          </p>
+        )}
+      </div>
 
       <div className="bg-white border border-gray-100 rounded-2xl p-4">
         <p className="text-sm font-semibold text-gray-900 mb-2">공복시간</p>
