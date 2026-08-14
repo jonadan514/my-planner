@@ -48,9 +48,9 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug
       - name: Name APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk Prec-1.1.0.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Prec-1.1.1.apk
       - uses: actions/upload-artifact@v4
         with:
           name: prec-debug-apk
-          path: Prec-1.1.0.apk
+          path: Prec-1.1.1.apk
           if-no-files-found: error

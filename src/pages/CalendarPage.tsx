@@ -24,13 +24,19 @@ export default function CalendarPage() {
   const load = useCallback(async () => {
     const start = format(startOfMonth(viewDate), 'yyyy-MM-dd')
     const end   = format(endOfMonth(viewDate), 'yyyy-MM-dd')
-    const evts  = await db.events.where('date').between(start, end, true, true).toArray()
-    setEvents(evts)
-    const cfg = await db.shiftConfigs.toCollection().last()
-    setShiftConfig(cfg ?? null)
+    const [nextEvents, nextShiftConfig] = await Promise.all([
+      db.events.where('date').between(start, end, true, true).toArray(),
+      db.shiftConfigs.toCollection().last(),
+    ])
+    return { nextEvents, nextShiftConfig: nextShiftConfig ?? null }
   }, [viewDate])
 
-  useEffect(() => { load() }, [load])
+  const applyLoadedCalendar = useCallback((data: Awaited<ReturnType<typeof load>>) => {
+    setEvents(data.nextEvents)
+    setShiftConfig(data.nextShiftConfig)
+  }, [])
+
+  useEffect(() => { void load().then(applyLoadedCalendar) }, [applyLoadedCalendar, load])
 
   const weeks = eachDayOfInterval({
     start: startOfWeek(startOfMonth(viewDate), { weekStartsOn: 0 }),
@@ -52,7 +58,7 @@ export default function CalendarPage() {
   const selectedEvents = dayEvents(selected)
 
   return (
-    <div className="page-enter flex flex-col" style={{ height: 'calc(100dvh - 64px)' }}>
+    <div className="page-enter flex h-full min-h-0 flex-col overflow-hidden">
 
       {/* 월 네비게이션 */}
       <div className="flex items-center justify-between px-4 pt-5 pb-2 shrink-0">
@@ -136,7 +142,7 @@ export default function CalendarPage() {
       </div>
 
       {/* 선택 날짜 일정 */}
-      <div className="flex-1 overflow-y-auto px-4 mt-3">
+      <div className="app-scroll min-h-0 flex-1 overflow-y-auto px-4 mt-3">
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-semibold text-gray-900">
             {format(parseISO(selected), 'M월 d일 (EEEE)', { locale: ko })}
@@ -179,7 +185,7 @@ export default function CalendarPage() {
         <ShiftSettingsModal
           current={shiftConfig}
           onClose={() => setShowShift(false)}
-          onSaved={load}
+          onSaved={() => { void load().then(applyLoadedCalendar) }}
         />
       )}
 
@@ -193,12 +199,12 @@ export default function CalendarPage() {
             if (ev.id) await db.events.put(ev)
             else await db.events.add({ ...ev, createdAt: Date.now() })
             setShowModal(false)
-            load()
+            applyLoadedCalendar(await load())
           }}
           onDelete={async (id) => {
             await db.events.delete(id)
             setShowModal(false)
-            load()
+            applyLoadedCalendar(await load())
           }}
         />
       )}

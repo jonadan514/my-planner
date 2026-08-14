@@ -8,7 +8,6 @@ import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
-import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -29,7 +28,6 @@ import kotlinx.coroutines.launch
 
 @CapacitorPlugin(name = "HealthConnectBridge")
 class HealthConnectBridgePlugin : Plugin() {
-    private val samsungHealthOrigin = DataOrigin("com.sec.android.app.shealth")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private lateinit var permissionLauncher: ActivityResultLauncher<Set<String>>
     private var pendingPermissionCall: PluginCall? = null
@@ -98,7 +96,7 @@ class HealthConnectBridgePlugin : Plugin() {
                 }
                 val requestedTypes = call.getArray("dataTypes")?.toStringSet().orEmpty()
                 val startTime = call.getString("startTime")?.let(Instant::parse)
-                    ?: Instant.now().minus(Duration.ofDays(30))
+                    ?: Instant.now().minus(Duration.ofDays(90))
                 val client = HealthConnectClient.getOrCreate(context)
                 val granted = client.permissionController.getGrantedPermissions()
                 if (exercisePermission !in granted || "EXERCISE" !in requestedTypes) {
@@ -152,7 +150,6 @@ class HealthConnectBridgePlugin : Plugin() {
                 ReadRecordsRequest(
                     recordType = ExerciseSessionRecord::class,
                     timeRangeFilter = TimeRangeFilter.between(startTime, endTime),
-                    dataOriginFilter = setOf(samsungHealthOrigin),
                     pageToken = pageToken,
                 ),
             )

@@ -3,6 +3,7 @@ import { db } from '../db/database'
 import type { WorkoutEntry } from '../db/database'
 import { format, parseISO } from 'date-fns'
 import { ko } from 'date-fns/locale'
+import HealthConnectCard from '../components/HealthConnectCard'
 
 const CATEGORIES = ['가슴', '등', '하체', '어깨', '팔', '유산소', '기타']
 
@@ -39,12 +40,21 @@ export default function WorkoutTab() {
   const [distance, setDistance]       = useState('')
   const [memo, setMemo]               = useState('')
 
-  const load = useCallback(async () => {
-    const all = await db.workoutLogs.orderBy('createdAt').reverse().toArray()
+  const load = useCallback(
+    () => db.workoutLogs.orderBy('createdAt').reverse().toArray(),
+    [],
+  )
+
+  const applyLoadedWorkouts = useCallback((all: WorkoutEntry[]) => {
     setGroups(groupByDate(all))
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    void load().then(applyLoadedWorkouts)
+    const reloadAfterHealthSync = () => { void load().then(applyLoadedWorkouts) }
+    window.addEventListener('health-connect-synced', reloadAfterHealthSync)
+    return () => window.removeEventListener('health-connect-synced', reloadAfterHealthSync)
+  }, [applyLoadedWorkouts, load])
 
   const resetForm = () => {
     setName(''); setSets(''); setReps(''); setWeight('')
@@ -73,16 +83,20 @@ export default function WorkoutTab() {
     await db.workoutLogs.add(entry)
     resetForm()
     setShowForm(false)
-    load()
+    await load().then(applyLoadedWorkouts)
   }
 
   const del = async (id: number) => {
     await db.workoutLogs.delete(id)
-    load()
+    await load().then(applyLoadedWorkouts)
   }
 
   return (
     <div className="px-4 pt-3 pb-4">
+      <div className="mb-3">
+        <HealthConnectCard />
+      </div>
+
       {/* 추가 버튼 */}
       <button
         onClick={() => setShowForm(v => !v)}

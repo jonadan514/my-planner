@@ -46,6 +46,8 @@ export async function getHealthConnectStatus(): Promise<{
   status: HealthSyncStatus
   grantedDataTypes: HealthDataType[]
   lastSuccessfulSyncAt?: string
+  lastRecordCount?: number
+  sourcePackages?: string[]
   errorCode?: string
 }> {
   const bridge = getNativeHealthConnectBridge()
@@ -79,6 +81,8 @@ export async function getHealthConnectStatus(): Promise<{
     status,
     grantedDataTypes: nativeStatus.grantedDataTypes,
     lastSuccessfulSyncAt,
+    lastRecordCount: grantedStates.reduce((sum, state) => sum + (state.lastRecordCount ?? 0), 0),
+    sourcePackages: [...new Set(grantedStates.flatMap(state => state.sourcePackages ?? []))],
     errorCode: errors[0]?.errorCode,
   }
 }
@@ -141,14 +145,17 @@ export async function syncHealthConnect(requestPermissions = false) {
   try {
     const existingStates = await db.healthSyncStates.toArray()
     const changeTokens = Object.fromEntries(existingStates.flatMap(state => state.changeToken ? [[state.dataType, state.changeToken]] : []))
-    const startTime = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString()
+    const startTime = new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString()
     const result = await bridge.readRecords({ dataTypes: nativeStatus.grantedDataTypes, startTime, changeTokens })
     for (const record of result.records) await saveImportedRecord(record, now)
     const completedAt = new Date().toISOString()
+    const sourcePackages = [...new Set(result.records.map(record => record.sourcePackage).filter((value): value is string => !!value))]
     await Promise.all(nativeStatus.grantedDataTypes.map(dataType => db.healthSyncStates.put({
       dataType,
       status: 'SUCCESS',
       lastSuccessfulSyncAt: completedAt,
+      lastRecordCount: result.records.filter(record => record.dataType === dataType).length,
+      sourcePackages,
       changeToken: result.changeTokens?.[dataType],
       updatedAt: Date.now(),
     })))

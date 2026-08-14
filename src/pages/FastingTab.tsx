@@ -3,9 +3,10 @@ import { db } from '../db/database'
 import type { FastingRecord } from '../db/database'
 import { format } from 'date-fns'
 import {
-  requestPermission,
+  getPermissionStatus, requestPermission,
   showFastingNotification, showFastingComplete, clearFastingNotification,
 } from '../utils/notifications'
+import type { AppNotificationPermission } from '../utils/notifications'
 
 const GOALS = [14, 16, 18, 24]
 
@@ -13,21 +14,32 @@ export default function FastingTab() {
   const [active, setActive] = useState<FastingRecord | null>(null)
   const [records, setRecords] = useState<FastingRecord[]>([])
   const [goalHours, setGoalHours] = useState(16)
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(() => Date.now())
   const [editStartTime, setEditStartTime] = useState(false)
   const [startInput, setStartInput] = useState('')
-  const getNotifPerm = (): NotificationPermission =>
-    'Notification' in window ? Notification.permission : 'denied'
-  const [notifPerm, setNotifPerm] = useState<NotificationPermission>(getNotifPerm)
+  const [notifPerm, setNotifPerm] = useState<AppNotificationPermission>('prompt')
+  const [editingRecordId, setEditingRecordId] = useState<number | null>(null)
+  const [recordStartInput, setRecordStartInput] = useState('')
+  const [recordEndInput, setRecordEndInput] = useState('')
+  const [recordGoalInput, setRecordGoalInput] = useState('')
+  const [recordEditError, setRecordEditError] = useState('')
 
-  const load = useCallback(async () => {
-    const all = await db.fastingRecords.orderBy('startTime').reverse().toArray()
+  const load = useCallback(
+    () => db.fastingRecords.orderBy('startTime').reverse().toArray(),
+    [],
+  )
+
+  const applyLoadedRecords = useCallback((all: FastingRecord[]) => {
     const cur = all.find(r => !r.endTime) ?? null
     setActive(cur)
     setRecords(all.filter(r => r.endTime))
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { void load().then(applyLoadedRecords) }, [applyLoadedRecords, load])
+
+  useEffect(() => {
+    getPermissionStatus().then(setNotifPerm).catch(() => setNotifPerm('denied'))
+  }, [])
 
   useEffect(() => {
     if (!active) return
@@ -48,6 +60,7 @@ export default function FastingTab() {
 
   const startFasting = async () => {
     const granted = await requestPermission()
+    setNotifPerm(granted ? 'granted' : await getPermissionStatus())
     const ts = Date.now()
     const id = await db.fastingRecords.add({ startTime: ts, goalHours })
     setActive({ id, startTime: ts, goalHours })
@@ -62,7 +75,7 @@ export default function FastingTab() {
     await clearFastingNotification()
     const duration = endTime - active.startTime
     if (duration >= active.goalHours * 3600000) showFastingComplete(duration)
-    load()
+    await load().then(applyLoadedRecords)
   }
 
   const applyStartEdit = async () => {
@@ -76,7 +89,40 @@ export default function FastingTab() {
 
   const deleteRecord = async (id: number) => {
     await db.fastingRecords.delete(id)
-    load()
+    if (editingRecordId === id) setEditingRecordId(null)
+    await load().then(applyLoadedRecords)
+  }
+
+  const openRecordEdit = (record: FastingRecord) => {
+    if (!record.id || !record.endTime) return
+    setEditingRecordId(record.id)
+    setRecordStartInput(format(new Date(record.startTime), "yyyy-MM-dd'T'HH:mm"))
+    setRecordEndInput(format(new Date(record.endTime), "yyyy-MM-dd'T'HH:mm"))
+    setRecordGoalInput(String(record.goalHours))
+    setRecordEditError('')
+  }
+
+  const saveRecordEdit = async () => {
+    if (!editingRecordId) return
+    const startTime = new Date(recordStartInput).getTime()
+    const endTime = new Date(recordEndInput).getTime()
+    const nextGoalHours = Number(recordGoalInput)
+    if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime <= startTime) {
+      setRecordEditError('종료 시간은 시작 시간보다 뒤여야 합니다.')
+      return
+    }
+    if (!Number.isFinite(nextGoalHours) || nextGoalHours <= 0 || nextGoalHours > 168) {
+      setRecordEditError('목표 시간은 1~168시간으로 입력해 주세요.')
+      return
+    }
+    await db.fastingRecords.update(editingRecordId, {
+      startTime,
+      endTime,
+      goalHours: nextGoalHours,
+    })
+    setEditingRecordId(null)
+    setRecordEditError('')
+    await load().then(applyLoadedRecords)
   }
 
   const formatDur = (ms: number) => {
@@ -91,7 +137,7 @@ export default function FastingTab() {
 
   const askPermission = async () => {
     const granted = await requestPermission()
-    setNotifPerm(granted ? 'granted' : 'denied')
+    setNotifPerm(granted ? 'granted' : await getPermissionStatus())
   }
 
   return (
@@ -102,7 +148,11 @@ export default function FastingTab() {
           <span className="text-lg">🔔</span>
           <div className="flex-1">
             <p className="text-xs text-amber-500 font-medium">알림 권한 필요</p>
-            <p className="text-[10px] text-gray-400">단식 시작·종료 시 상태바 알림을 받으려면 허용해주세요</p>
+            <p className="text-[10px] text-gray-400">
+              {notifPerm === 'denied'
+                ? '거부된 경우 설정 → 애플리케이션 → Prec → 알림에서 켜주세요'
+                : '단식 진행·목표 완료 알림을 받으려면 허용해 주세요'}
+            </p>
           </div>
           <button
             onClick={askPermission}
@@ -230,19 +280,75 @@ export default function FastingTab() {
               const dur = r.endTime! - r.startTime
               const achieved = dur >= r.goalHours * 3600000
               return (
-                <li key={r.id} className="bg-white border border-gray-100 rounded-xl p-3.5 flex items-center gap-3">
-                  <span className="text-lg">{achieved ? '✅' : '⏹'}</span>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">{formatDur(dur)}</p>
-                    <p className="text-xs text-gray-400">
-                      {format(new Date(r.startTime), 'M/d HH:mm')} ~ {format(new Date(r.endTime!), 'HH:mm')}
-                      {' · '}목표 {r.goalHours}h
-                    </p>
+                <li key={r.id} className="bg-white border border-gray-100 rounded-xl p-3.5">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{achieved ? '✅' : '⏹'}</span>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-900">{formatDur(dur)}</p>
+                      <p className="text-xs text-gray-400">
+                        {format(new Date(r.startTime), 'M/d HH:mm')} ~ {format(new Date(r.endTime!), 'M/d HH:mm')}
+                        {' · '}목표 {r.goalHours}h
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => editingRecordId === r.id ? setEditingRecordId(null) : openRecordEdit(r)}
+                      className="rounded-lg px-2 py-1 text-xs text-indigo-500 active:bg-indigo-50"
+                    >수정</button>
+                    <button
+                      type="button"
+                      aria-label="단식 기록 삭제"
+                      onClick={() => r.id && deleteRecord(r.id)}
+                      className="text-gray-300 text-lg active:text-red-400"
+                    >×</button>
                   </div>
-                  <button
-                    onClick={() => r.id && deleteRecord(r.id)}
-                    className="text-gray-300 text-lg active:text-red-400"
-                  >×</button>
+                  {editingRecordId === r.id && (
+                    <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+                      <label className="block text-[11px] text-gray-400">
+                        시작 시간
+                        <input
+                          type="datetime-local"
+                          value={recordStartInput}
+                          onChange={event => setRecordStartInput(event.target.value)}
+                          className="mt-1 w-full rounded-xl bg-gray-100 px-3 py-2 text-sm text-gray-900 outline-none"
+                        />
+                      </label>
+                      <label className="block text-[11px] text-gray-400">
+                        종료 시간
+                        <input
+                          type="datetime-local"
+                          value={recordEndInput}
+                          onChange={event => setRecordEndInput(event.target.value)}
+                          className="mt-1 w-full rounded-xl bg-gray-100 px-3 py-2 text-sm text-gray-900 outline-none"
+                        />
+                      </label>
+                      <label className="block text-[11px] text-gray-400">
+                        목표 시간
+                        <input
+                          type="number"
+                          min="1"
+                          max="168"
+                          step="0.5"
+                          value={recordGoalInput}
+                          onChange={event => setRecordGoalInput(event.target.value)}
+                          className="mt-1 w-full rounded-xl bg-gray-100 px-3 py-2 text-sm text-gray-900 outline-none"
+                        />
+                      </label>
+                      {recordEditError && <p className="text-xs text-red-400">{recordEditError}</p>}
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditingRecordId(null)}
+                          className="flex-1 rounded-xl bg-gray-100 py-2 text-xs font-medium text-gray-500"
+                        >취소</button>
+                        <button
+                          type="button"
+                          onClick={saveRecordEdit}
+                          className="flex-1 rounded-xl bg-indigo-500 py-2 text-xs font-semibold text-white"
+                        >저장</button>
+                      </div>
+                    </div>
+                  )}
                 </li>
               )
             })}

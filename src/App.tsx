@@ -13,8 +13,8 @@ export default function App() {
   const [tab, setTab] = useState<TabId>('home')
 
   return (
-    <div className="flex flex-col bg-[#f5f6fa] text-gray-900" style={{ height: '100dvh' }}>
-      <main className="flex-1 overflow-y-auto" style={{ paddingBottom: '72px' }}>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#f5f6fa] text-gray-900">
+      <main className="app-scroll flex-1 overflow-y-auto" style={{ paddingBottom: '72px' }}>
         {tab === 'home'     && <HomePage onNavigate={setTab} />}
         {tab === 'calendar' && <CalendarPage />}
         {tab === 'todo'     && <TodoPage />}

@@ -174,6 +174,8 @@ export interface HealthRecord {
 export interface HealthSyncState {
   dataType: HealthDataType
   lastSuccessfulSyncAt?: string
+  lastRecordCount?: number
+  sourcePackages?: string[]
   changeToken?: string
   status: HealthSyncStatus
   errorCode?: string
