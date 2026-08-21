@@ -32,14 +32,15 @@ interface HealthConnectBridge {
 - 최초 요청의 `startTime`은 최근 30일이다.
 - 외부 레코드는 `sourcePackage + dataType + externalRecordId` 조합으로 upsert한다.
 - 운동과 체중 자동 기록은 기존 수동 기록을 덮어쓰지 않는다.
-- 걸음·수면·체지방은 원본 `healthRecords`에 저장한다.
+- 걸음은 Health Connect 집계값으로 저장해 여러 원본 앱의 중복 합산을 피한다.
+- 수면·체중·체지방은 원본 `healthRecords`에 저장한다.
 - GPS 경로는 반환하거나 저장하지 않는다.
 - 브리지가 없거나 권한이 없어도 모든 수동 기록 기능은 계속 동작한다.
 
 ## Android 구현
 
 - Capacitor의 `HealthConnectBridge` 플러그인이 브리지를 제공한다.
-- 현재 권한 범위는 운동 세션, 거리, 총 소모 열량, 심박 읽기로 제한한다.
-- 삼성헬스 원본 패키지(`com.sec.android.app.shealth`)가 Health Connect에 기록한 운동 세션만 최근 30일 범위에서 읽는다.
+- 현재 권한 범위는 운동 세션, 거리, 총 소모 열량, 심박, 걸음, 수면, 체중, 체지방 읽기다.
+- 특정 제조사에 제한하지 않고 Health Connect에 공유된 최근 30일 기록을 읽는다.
 - 거리·열량·평균 심박수는 각 운동 세션 시간과 원본 앱을 기준으로 집계한다.
 - 건강 데이터는 IndexedDB에만 저장하며 별도 서버로 전송하지 않는다.

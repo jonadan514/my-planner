@@ -4,6 +4,7 @@ import type { WorkoutEntry } from '../db/database'
 import { format, parseISO } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import HealthConnectCard from '../components/HealthConnectCard'
+import { findWorkoutDuplicateCandidate } from '../utils/workoutDedup'
 
 const CATEGORIES = ['가슴', '등', '하체', '어깨', '팔', '유산소', '기타']
 
@@ -80,7 +81,13 @@ export default function WorkoutTab() {
       }),
       memo: memo.trim() || undefined,
     }
-    await db.workoutLogs.add(entry)
+    const id = await db.workoutLogs.add(entry) as number
+    const automaticEntries = await db.workoutLogs.where('date').equals(date)
+      .and(item => item.origin === 'HEALTH_CONNECT' && !item.duplicateDismissed && item.linkedWorkoutId == null).toArray()
+    const automaticCandidate = automaticEntries.find(automatic =>
+      findWorkoutDuplicateCandidate(automatic, [{ ...entry, id }]) != null,
+    )
+    if (automaticCandidate?.id) await db.workoutLogs.update(automaticCandidate.id, { duplicateCandidateId: id })
     resetForm()
     setShowForm(false)
     await load().then(applyLoadedWorkouts)
@@ -88,6 +95,34 @@ export default function WorkoutTab() {
 
   const del = async (id: number) => {
     await db.workoutLogs.delete(id)
+    await load().then(applyLoadedWorkouts)
+  }
+
+  const mergeDuplicate = async (automatic: WorkoutEntry) => {
+    if (!automatic.id || !automatic.duplicateCandidateId) return
+    const manual = await db.workoutLogs.get(automatic.duplicateCandidateId)
+    if (!manual) return
+    await db.transaction('rw', db.workoutLogs, async () => {
+      await db.workoutLogs.update(automatic.id!, {
+        name: automatic.name || manual.name,
+        category: manual.category,
+        sets: manual.sets,
+        reps: manual.reps,
+        weight: manual.weight,
+        duration: automatic.duration ?? manual.duration,
+        distance: automatic.distance ?? manual.distance,
+        memo: [manual.memo, automatic.memo].filter(Boolean).join(' · ') || undefined,
+        linkedWorkoutId: manual.id,
+        duplicateCandidateId: undefined,
+      })
+      await db.workoutLogs.delete(manual.id!)
+    })
+    await load().then(applyLoadedWorkouts)
+  }
+
+  const keepDuplicateSeparate = async (automatic: WorkoutEntry) => {
+    if (!automatic.id) return
+    await db.workoutLogs.update(automatic.id, { duplicateCandidateId: undefined, duplicateDismissed: true })
     await load().then(applyLoadedWorkouts)
   }
 
@@ -265,6 +300,15 @@ export default function WorkoutTab() {
                         {e.averageHeartRate != null && ` · 평균 ${Math.round(e.averageHeartRate)}bpm`}
                         {e.memo && ` — ${e.memo}`}
                       </p>
+                      {e.origin === 'HEALTH_CONNECT' && e.duplicateCandidateId ? (
+                        <div className="mt-2 rounded-lg bg-amber-50 px-2.5 py-2">
+                          <p className="text-[10px] text-amber-700">같은 날 수동 운동과 중복 가능성이 있습니다.</p>
+                          <div className="mt-1.5 flex gap-2">
+                            <button type="button" onClick={() => void mergeDuplicate(e)} className="text-[10px] font-semibold text-amber-700 underline">합치기</button>
+                            <button type="button" onClick={() => void keepDuplicateSeparate(e)} className="text-[10px] text-gray-500 underline">각각 유지</button>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                     {e.origin !== 'HEALTH_CONNECT' && <button
                       onClick={() => e.id && del(e.id)}

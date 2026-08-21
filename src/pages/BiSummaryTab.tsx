@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { format, differenceInDays, parseISO, addDays } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { db, summarizeMeals } from '../db/database'
-import type { DailyHealthLog, MealLog, ShiftType, UserNutritionTargets, WorkoutEntry } from '../db/database'
+import type { DailyHealthLog, HealthRecord, MealLog, ShiftType, UserNutritionTargets, WorkoutEntry } from '../db/database'
 import { getCompletedFastingIntervals } from '../utils/nutrition'
 
 const SHIFT_LABELS: Record<ShiftType, string> = {
@@ -32,6 +32,7 @@ export default function BiSummaryTab() {
   const [logs, setLogs] = useState<DailyHealthLog[]>([])
   const [weeklyMeals, setWeeklyMeals] = useState<MealLog[]>([])
   const [weeklyWorkouts, setWeeklyWorkouts] = useState<WorkoutEntry[]>([])
+  const [weeklyHealth, setWeeklyHealth] = useState<HealthRecord[]>([])
   const [targets, setTargets] = useState<UserNutritionTargets | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -39,14 +40,16 @@ export default function BiSummaryTab() {
     const cfg = await db.bodyConfigs.toCollection().last()
     const today = parseISO(todayStr)
     const weeklyStart = format(addDays(today, -6), 'yyyy-MM-dd')
-    const [meals, workouts, nutritionTargets] = await Promise.all([
+    const [meals, workouts, nutritionTargets, healthRecords] = await Promise.all([
       db.mealLogs.where('date').between(weeklyStart, todayStr, true, true).toArray(),
       db.workoutLogs.where('date').between(weeklyStart, todayStr, true, true).toArray(),
       db.nutritionTargets.toCollection().last(),
+      db.healthRecords.where('date').between(weeklyStart, todayStr, true, true).toArray(),
     ])
     setWeeklyMeals(meals)
     setWeeklyWorkouts(workouts)
     setTargets(nutritionTargets ?? null)
+    setWeeklyHealth(healthRecords)
 
     if (!cfg) { setLoading(false); return }
     setCycleStartDate(cfg.cycleStartDate)
@@ -65,7 +68,7 @@ export default function BiSummaryTab() {
     setLoading(false)
   }, [todayStr])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { queueMicrotask(() => { void load() }) }, [load])
 
   if (loading) return <div className="px-4 pt-8 text-gray-400 text-sm text-center">로딩 중...</div>
 
@@ -84,6 +87,16 @@ export default function BiSummaryTab() {
   }), { normal: 0, defensive: 0, ultraProcessed: 0, sugaryDrink: 0 })
   const fastingIntervals = getCompletedFastingIntervals(weeklyMeals)
   const workoutMinutes = weeklyWorkouts.reduce((total, workout) => total + (workout.duration ?? 0), 0)
+  const stepDays = weekDates.map(date => weeklyHealth
+    .filter(record => record.dataType === 'STEPS' && record.date === date)
+    .reduce((sum, record) => sum + (record.value ?? 0), 0)).filter(value => value > 0)
+  const sleepDays = weekDates.map(date => weeklyHealth
+    .filter(record => record.dataType === 'SLEEP' && record.date === date)
+    .reduce((longest, record) => Math.max(longest, record.durationMinutes ?? 0), 0)).filter(value => value > 0)
+  const averageSteps = stepDays.length > 0 ? Math.round(stepDays.reduce((sum, value) => sum + value, 0) / stepDays.length) : 0
+  const averageSleepMinutes = sleepDays.length > 0 ? Math.round(sleepDays.reduce((sum, value) => sum + value, 0) / sleepDays.length) : 0
+  const latestWeight = weeklyHealth.filter(record => record.dataType === 'WEIGHT' && record.value != null)
+    .toSorted((a, b) => b.startTime.localeCompare(a.startTime))[0]?.value
 
   const weeklyNutritionCard = (
     <div className="space-y-3">
@@ -115,6 +128,11 @@ export default function BiSummaryTab() {
         <StatCard label="운동 시간" value={String(workoutMinutes)} unit="분" color="#10b981" />
         <StatCard label="공복 구간" value={String(fastingIntervals.length)} unit="회" color="#f59e0b" />
       </div>
+      <div className="grid grid-cols-3 gap-2">
+        <StatCard label="평균 걸음" value={averageSteps > 0 ? averageSteps.toLocaleString() : '—'} unit={averageSteps > 0 ? '보' : ''} color="#6366f1" />
+        <StatCard label="평균 수면" value={averageSleepMinutes > 0 ? (averageSleepMinutes / 60).toFixed(1) : '—'} unit={averageSleepMinutes > 0 ? '시간' : ''} color="#8b5cf6" />
+        <StatCard label="최근 체중" value={latestWeight == null ? '—' : latestWeight.toFixed(1)} unit={latestWeight == null ? '' : 'kg'} color="#10b981" />
+      </div>
     </div>
   )
 
@@ -132,10 +150,7 @@ export default function BiSummaryTab() {
   const averageScore = count > 0
     ? recordedLogs.reduce((s, l) => s + l.score, 0) / count
     : 0
-  // 핵심 3개(단백질·야식·활동) 모두 충족한 날
-  const achievedDays = recordedLogs.filter(l =>
-    l.behaviors.protein && l.behaviors.fasting && l.behaviors.activity
-  ).length
+  const achievedDays = recordedLogs.filter(log => log.achieved).length
   // 운동 기록한 날
   const exerciseDays = recordedLogs.filter(l => l.behaviors.exercise).length
 
@@ -222,7 +237,7 @@ export default function BiSummaryTab() {
           <div className="grid grid-cols-3 gap-2">
             <StatCard label="핵심 달성일" value={String(achievedDays)} unit={`/ ${count}일`} color="#10b981" />
             <StatCard label="운동 횟수" value={String(exerciseDays)} unit={`/ ${count}일`} color="#6366f1" />
-            <StatCard label="평균 점수" value={averageScore.toFixed(1)} unit="/ 6" color={averageScore >= 3 ? '#10b981' : '#ef4444'} />
+            <StatCard label="평균 점수" value={averageScore.toFixed(1)} unit="/ 5" color={averageScore >= 3 ? '#10b981' : '#ef4444'} />
           </div>
 
           {/* 일별 점수 로그 */}
@@ -240,7 +255,7 @@ export default function BiSummaryTab() {
                   <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${log.achieved ? 'bg-emerald-500' : 'bg-indigo-500'}`}
-                      style={{ width: `${(log.score / 6) * 100}%` }}
+                      style={{ width: `${(log.score / 5) * 100}%` }}
                     />
                   </div>
                   <span className={`text-xs font-bold w-6 text-right shrink-0 ${log.achieved ? 'text-emerald-500' : 'text-gray-400'}`}>

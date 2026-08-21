@@ -88,6 +88,9 @@ export interface WorkoutEntry {
   endTime?: string
   caloriesKcal?: number
   averageHeartRate?: number
+  duplicateCandidateId?: number
+  duplicateDismissed?: boolean
+  linkedWorkoutId?: number
 }
 
 export type ShiftType = 'day' | 'night' | 'off_after_night' | 'holiday'
@@ -100,11 +103,8 @@ export interface DailySymptoms {
 }
 
 export interface DailyBehavior {
-  // 핵심 3개 — 매일 확인
   protein: boolean
   fasting: boolean
-  activity: boolean
-  // 보조 3개 — 여유 있을 때
   carbs: boolean
   vegetables: boolean
   exercise: boolean
@@ -132,6 +132,17 @@ export interface DailyHealthLog {
 export interface BodyConfig {
   id?: number
   cycleStartDate: string  // YYYY-MM-DD (8일 주기 첫 번째 주간근무일)
+}
+
+export interface BodyProfile {
+  id?: number
+  age: number
+  heightCm: number
+  weightKg: number
+  weeklyExerciseSessions: number
+  averageDailySteps: number
+  createdAt: number
+  updatedAt: number
 }
 
 export type MealType = 'lunch' | 'dinner' | 'snack' | 'night_snack' | 'other'
@@ -190,6 +201,8 @@ export interface UserNutritionTargets {
   carbohydrateMaxGrams?: number
   vegetableTargetGrams?: number
   exerciseMinutes?: number
+  source?: 'MANUAL' | 'PROFILE_RECOMMENDATION'
+  profileUpdatedAt?: number
   createdAt: number
   updatedAt: number
 }
@@ -368,6 +381,7 @@ export class PlannerDB extends Dexie {
   nutritionTargets!: Table<UserNutritionTargets>
   healthRecords!: Table<HealthRecord>
   healthSyncStates!: Table<HealthSyncState>
+  bodyProfiles!: Table<BodyProfile>
 
   constructor() {
     super('plannerDB')
@@ -464,6 +478,34 @@ export class PlannerDB extends Dexie {
       nutritionTargets: '++id, updatedAt',
       healthRecords: '++id, &externalKey, externalRecordId, dataType, date, startTime, updatedAt',
       healthSyncStates: '&dataType, status, updatedAt',
+    })
+    this.version(9).stores({
+      events: '++id, date, createdAt',
+      todos: '++id, dueDate, done, createdAt',
+      fastingRecords: '++id, startTime',
+      inBodyRecords: '++id, date, externalRecordId, createdAt',
+      shiftConfigs: '++id',
+      ledger: '++id, date, type, createdAt',
+      workoutLogs: '++id, date, name, category, externalRecordId, origin, createdAt',
+      bodyConfigs: '++id',
+      dailyHealthLogs: '++id, date, createdAt',
+      mealLogs: '++id, date, qualityType, presetId, createdAt',
+      mealPresets: '++id, name, favorite, createdAt',
+      weeklyMeasurements: '++id, date, externalRecordId, origin, createdAt',
+      nutritionTargets: '++id, updatedAt',
+      healthRecords: '++id, &externalKey, externalRecordId, dataType, date, startTime, updatedAt',
+      healthSyncStates: '&dataType, status, updatedAt',
+      bodyProfiles: '++id, updatedAt',
+    }).upgrade(async transaction => {
+      await transaction.table<DailyHealthLog>('dailyHealthLogs').toCollection().modify(log => {
+        const behaviors = log.behaviors as DailyBehavior & { activity?: boolean }
+        const score = [behaviors.protein, behaviors.carbs, behaviors.vegetables, behaviors.exercise, behaviors.fasting]
+          .filter(Boolean).length
+        delete behaviors.activity
+        log.behaviors = behaviors
+        log.score = score
+        log.achieved = score === 5
+      })
     })
   }
 }

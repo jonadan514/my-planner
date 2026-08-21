@@ -2,8 +2,11 @@ import { format } from 'date-fns'
 import { Capacitor, registerPlugin } from '@capacitor/core'
 import { db } from '../db/database'
 import type { HealthDataType, HealthRecord, HealthSyncStatus } from '../db/database'
+import { findWorkoutDuplicateCandidate } from '../utils/workoutDedup'
 
-const DATA_TYPES: HealthDataType[] = ['EXERCISE']
+const DATA_TYPES: HealthDataType[] = ['EXERCISE', 'STEPS', 'SLEEP', 'WEIGHT', 'BODY_FAT']
+const AUTO_SYNC_INTERVAL_MS = 15 * 60 * 1000
+let activeSync: Promise<Awaited<ReturnType<typeof getHealthConnectStatus>>> | undefined
 
 interface BridgeStatus {
   available: boolean
@@ -68,12 +71,15 @@ export async function getHealthConnectStatus(): Promise<{
 
   const grantedStates = syncStates.filter(state => nativeStatus.grantedDataTypes.includes(state.dataType))
   const errors = grantedStates.filter(state => state.status === 'ERROR')
+  const hasMissingPermissions = nativeStatus.grantedDataTypes.length < DATA_TYPES.length
   const status: HealthSyncStatus = grantedStates.some(state => state.status === 'SYNCING')
     ? 'SYNCING'
     : errors.length === grantedStates.length && errors.length > 0
       ? 'ERROR'
       : errors.length > 0
         ? 'PARTIAL'
+        : hasMissingPermissions
+          ? 'PARTIAL'
         : grantedStates.length > 0 && grantedStates.every(state => state.status === 'SUCCESS')
           ? 'SUCCESS'
           : 'IDLE'
@@ -95,12 +101,23 @@ async function saveImportedRecord(record: Omit<HealthRecord, 'id' | 'createdAt' 
   if (record.dataType === 'EXERCISE') {
     const workout = await db.workoutLogs.where('externalRecordId').equals(record.externalRecordId)
       .and(item => item.sourcePackage === record.sourcePackage).first()
-    await db.workoutLogs.put({
-      id: workout?.id,
+    const automaticWorkout = {
       date: record.date,
       name: record.unit || 'Health Connect 운동',
       category: '자동 기록',
       duration: record.durationMinutes,
+      origin: 'HEALTH_CONNECT' as const,
+      createdAt: workout?.createdAt ?? now,
+    }
+    const manualCandidate = workout
+      ? undefined
+      : findWorkoutDuplicateCandidate(
+          automaticWorkout,
+          await db.workoutLogs.where('date').equals(record.date).and(item => item.origin !== 'HEALTH_CONNECT').toArray(),
+        )
+    await db.workoutLogs.put({
+      id: workout?.id,
+      ...automaticWorkout,
       distance: record.distanceKm,
       caloriesKcal: record.caloriesKcal,
       averageHeartRate: record.averageHeartRate,
@@ -109,7 +126,9 @@ async function saveImportedRecord(record: Omit<HealthRecord, 'id' | 'createdAt' 
       origin: 'HEALTH_CONNECT',
       externalRecordId: record.externalRecordId,
       sourcePackage: record.sourcePackage,
-      createdAt: workout?.createdAt ?? now,
+      duplicateCandidateId: workout?.duplicateCandidateId ?? manualCandidate?.id,
+      duplicateDismissed: workout?.duplicateDismissed,
+      linkedWorkoutId: workout?.linkedWorkoutId,
     })
   }
 
@@ -124,6 +143,20 @@ async function saveImportedRecord(record: Omit<HealthRecord, 'id' | 'createdAt' 
       externalRecordId: record.externalRecordId,
       sourcePackage: record.sourcePackage,
       createdAt: measurement?.createdAt ?? now,
+    })
+  }
+
+  if (record.dataType === 'BODY_FAT' && record.value != null) {
+    const inBody = await db.inBodyRecords.where('externalRecordId').equals(record.externalRecordId)
+      .and(item => item.sourcePackage === record.sourcePackage).first()
+    await db.inBodyRecords.put({
+      id: inBody?.id,
+      date: record.date,
+      bodyFatPct: record.value,
+      origin: 'HEALTH_CONNECT',
+      externalRecordId: record.externalRecordId,
+      sourcePackage: record.sourcePackage,
+      createdAt: inBody?.createdAt ?? now,
     })
   }
 }
@@ -145,17 +178,19 @@ export async function syncHealthConnect(requestPermissions = false) {
   try {
     const existingStates = await db.healthSyncStates.toArray()
     const changeTokens = Object.fromEntries(existingStates.flatMap(state => state.changeToken ? [[state.dataType, state.changeToken]] : []))
-    const startTime = new Date(now - 90 * 24 * 60 * 60 * 1000).toISOString()
+    const startTime = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString()
     const result = await bridge.readRecords({ dataTypes: nativeStatus.grantedDataTypes, startTime, changeTokens })
     for (const record of result.records) await saveImportedRecord(record, now)
     const completedAt = new Date().toISOString()
-    const sourcePackages = [...new Set(result.records.map(record => record.sourcePackage).filter((value): value is string => !!value))]
     await Promise.all(nativeStatus.grantedDataTypes.map(dataType => db.healthSyncStates.put({
       dataType,
       status: 'SUCCESS',
       lastSuccessfulSyncAt: completedAt,
       lastRecordCount: result.records.filter(record => record.dataType === dataType).length,
-      sourcePackages,
+      sourcePackages: [...new Set(result.records
+        .filter(record => record.dataType === dataType)
+        .map(record => record.sourcePackage)
+        .filter((value): value is string => !!value && value !== 'health-connect-aggregate'))],
       changeToken: result.changeTokens?.[dataType],
       updatedAt: Date.now(),
     })))
@@ -167,6 +202,18 @@ export async function syncHealthConnect(requestPermissions = false) {
     })))
   }
   return getHealthConnectStatus()
+}
+
+export async function syncHealthConnectIfStale() {
+  if (activeSync) return activeSync
+  activeSync = (async () => {
+    const status = await getHealthConnectStatus()
+    if (status.grantedDataTypes.length === 0) return status
+    const lastSyncTime = status.lastSuccessfulSyncAt ? new Date(status.lastSuccessfulSyncAt).getTime() : 0
+    if (Date.now() - lastSyncTime < AUTO_SYNC_INTERVAL_MS) return status
+    return syncHealthConnect(false)
+  })().finally(() => { activeSync = undefined })
+  return activeSync
 }
 
 export function healthRecordDate(isoTime: string): string {

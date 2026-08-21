@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import { format, differenceInDays, parseISO, subDays } from 'date-fns'
 import { db, summarizeMeals } from '../db/database'
-import type { DailyBehavior, ShiftType, DailyMealSummary, UserNutritionTargets } from '../db/database'
+import type { BodyProfile, DailyBehavior, ShiftType, DailyMealSummary, UserNutritionTargets } from '../db/database'
 import NutritionTargetsSheet from '../components/NutritionTargetsSheet'
 import { fastingBandLabel, getLatestCompletedFastingInterval, STATUS_LABELS } from '../utils/nutrition'
 import type { FastingInterval } from '../utils/nutrition'
 import { getDailyExerciseProgress } from '../utils/exercise'
 import HealthConnectCard from '../components/HealthConnectCard'
+import BodyProfileSheet from '../components/BodyProfileSheet'
+import HealthSnapshotCard from '../components/HealthSnapshotCard'
+import { mergeAutomaticBehaviors, scoreDailyBehaviors } from '../utils/dailyBehavior'
 
 const SHIFT_PATTERN: ShiftType[] = [
   'day', 'day', 'night', 'off_after_night', 'holiday', 'night', 'off_after_night', 'holiday',
@@ -85,8 +88,7 @@ const TODAY_BEHAVIORS: Array<{ key: keyof DailyBehavior; label: string; sublabel
 ]
 
 const DEFAULT_BEHAVIORS: DailyBehavior = {
-  protein: false, fasting: false, activity: false,
-  carbs: false, vegetables: false, exercise: false,
+  protein: false, fasting: false, carbs: false, vegetables: false, exercise: false,
 }
 
 const DEFAULT_SYMPTOMS = { backPain: 0, footNumbness: 0, neuroWarning: 'none' as const }
@@ -99,6 +101,10 @@ function computeCycleInfo(cycleStartDate: string, todayStr: string) {
   const cycleNumber = Math.floor(diff < 0 ? 0 : diff / 8) + 1
   const shiftType = SHIFT_PATTERN[cycleDay]
   return { cycleDay, cycleNumber, shiftType }
+}
+
+function currentTimestamp(): number {
+  return Date.now()
 }
 
 interface Props {
@@ -119,20 +125,25 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
   const [mealSummary, setMealSummary] = useState<DailyMealSummary | null>(null)
   const [targets, setTargets] = useState<UserNutritionTargets | null>(null)
   const [showTargets, setShowTargets] = useState(false)
+  const [profile, setProfile] = useState<BodyProfile | null>(null)
+  const [showProfile, setShowProfile] = useState(false)
   const [fastingInterval, setFastingInterval] = useState<FastingInterval | null>(null)
   const [exerciseProgress, setExerciseProgress] = useState(() => getDailyExerciseProgress([], undefined))
   const [exerciseWorkoutCount, setExerciseWorkoutCount] = useState(0)
   const [behaviorSources, setBehaviorSources] = useState<Partial<Record<keyof DailyBehavior, 'MANUAL' | 'MEAL_LOG' | 'HEALTH_CONNECT'>>>({})
+  const [automaticBehaviors, setAutomaticBehaviors] = useState<DailyBehavior>({ ...DEFAULT_BEHAVIORS })
+  const [automaticSources, setAutomaticSources] = useState<Partial<Record<keyof DailyBehavior, 'MANUAL' | 'MEAL_LOG' | 'HEALTH_CONNECT'>>>({})
 
   const load = useCallback(async () => {
     const recentStart = format(subDays(parseISO(todayStr), 2), 'yyyy-MM-dd')
-    const [cfg, existing, todayMeals, recentMeals, nutritionTargets, workouts] = await Promise.all([
+    const [cfg, existing, todayMeals, recentMeals, nutritionTargets, workouts, bodyProfile] = await Promise.all([
       db.bodyConfigs.toCollection().last(),
       db.dailyHealthLogs.where('date').equals(todayStr).first(),
       db.mealLogs.where('date').equals(todayStr).toArray(),
       db.mealLogs.where('date').between(recentStart, todayStr, true, true).toArray(),
       db.nutritionTargets.toCollection().last(),
       db.workoutLogs.where('date').equals(todayStr).toArray(),
+      db.bodyProfiles.toCollection().last(),
     ])
     if (cfg) {
       setConfigId(cfg.id)
@@ -142,6 +153,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
     const summary = summarizeMeals(todayMeals, nutritionTargets)
     const latestFasting = getLatestCompletedFastingInterval(recentMeals)
     setTargets(nutritionTargets ?? null)
+    setProfile(bodyProfile ?? null)
     setMealSummary(summary)
     setFastingInterval(latestFasting)
     const nextExerciseProgress = getDailyExerciseProgress(workouts, nutritionTargets?.exerciseMinutes)
@@ -151,38 +163,53 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
     const exerciseSource = workouts.some(workout => workout.origin === 'HEALTH_CONNECT')
       ? 'HEALTH_CONNECT' as const
       : 'MANUAL' as const
+    const nextAutomaticBehaviors: DailyBehavior = {
+      protein: summary?.proteinGoalMet ?? false,
+      carbs: summary?.carbRangeMet ?? false,
+      vegetables: summary?.vegetableGoalMet ?? false,
+      exercise: exerciseComplete,
+      fasting: latestFasting != null,
+    }
+    const nextAutomaticSources: Partial<Record<keyof DailyBehavior, 'MANUAL' | 'MEAL_LOG' | 'HEALTH_CONNECT'>> = {
+      protein: 'MEAL_LOG', carbs: 'MEAL_LOG', vegetables: 'MEAL_LOG', fasting: 'MEAL_LOG',
+      ...(workouts.length > 0 ? { exercise: exerciseSource } : {}),
+    }
+    const merged = mergeAutomaticBehaviors(
+      existing ? { ...DEFAULT_BEHAVIORS, ...existing.behaviors } : undefined,
+      existing?.behaviorSources,
+      nextAutomaticBehaviors,
+      nextAutomaticSources,
+    )
+    setAutomaticBehaviors(nextAutomaticBehaviors)
+    setAutomaticSources(nextAutomaticSources)
+    setBehaviors(merged.behaviors)
+    setBehaviorSources(merged.sources)
     if (existing) {
       setLogId(existing.id)
-      setBehaviors({
-        ...DEFAULT_BEHAVIORS,
-        ...existing.behaviors,
-        ...(exerciseComplete ? { exercise: true } : {}),
-      })
       setMemo(existing.memo ?? '')
-      setBehaviorSources({
-        ...existing.behaviorSources,
-        ...(exerciseComplete ? { exercise: exerciseSource } : {}),
-      })
-    } else {
-      setBehaviors(previous => ({
-        ...previous,
-        protein: summary?.proteinGoalMet ?? false,
-        carbs: summary?.carbRangeMet ?? false,
-        vegetables: summary?.vegetableGoalMet ?? false,
-        exercise: exerciseComplete,
-        fasting: latestFasting != null,
-      }))
-      setBehaviorSources({
-        protein: 'MEAL_LOG', carbs: 'MEAL_LOG', vegetables: 'MEAL_LOG', fasting: 'MEAL_LOG',
-        ...(exerciseComplete ? { exercise: exerciseSource } : {}),
-      })
+    }
+
+    if (cfg) {
+      const { cycleDay, cycleNumber, shiftType } = computeCycleInfo(cfg.cycleStartDate, todayStr)
+      const score = scoreDailyBehaviors(merged.behaviors)
+      const now = Date.now()
+      const record = {
+        date: todayStr, cycleNumber, cycleDay, shiftType,
+        behaviors: merged.behaviors, behaviorSources: merged.sources,
+        symptoms: existing?.symptoms ?? DEFAULT_SYMPTOMS,
+        score, achieved: score === TODAY_BEHAVIORS.length,
+        memo: existing?.memo,
+        createdAt: existing?.createdAt ?? now, updatedAt: now,
+      }
+      const id = await db.dailyHealthLogs.put({ ...record, id: existing?.id }) as number
+      setLogId(id)
     }
     setLoading(false)
   }, [todayStr])
 
   useEffect(() => {
-    load()
-    const reloadAfterHealthSync = () => load()
+    queueMicrotask(() => { void load() })
+    const reloadAfterHealthSync = () => { void load() }
     window.addEventListener('health-connect-synced', reloadAfterHealthSync)
     return () => window.removeEventListener('health-connect-synced', reloadAfterHealthSync)
   }, [load])
@@ -207,24 +234,36 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
     ? computeCycleInfo(cycleStartDate, todayStr)
     : { cycleDay: 0, cycleNumber: 1, shiftType: 'holiday' as ShiftType }
 
-  const autoFillFromMeals = () => {
-    if (!mealSummary) return
-    setBehaviors(prev => ({
-      ...prev,
-      protein:    mealSummary.proteinGoalMet,
-      vegetables: mealSummary.vegetableGoalMet,
-      carbs:      mealSummary.carbRangeMet,
-      fasting:    fastingInterval != null,
-    }))
-    setBehaviorSources(previous => ({
-      ...previous,
-      protein: 'MEAL_LOG', carbs: 'MEAL_LOG', vegetables: 'MEAL_LOG', fasting: 'MEAL_LOG',
-    }))
+  const persistBehaviors = async (
+    nextBehaviors: DailyBehavior,
+    nextSources: Partial<Record<keyof DailyBehavior, 'MANUAL' | 'MEAL_LOG' | 'HEALTH_CONNECT'>>,
+  ) => {
+    if (!cycleStartDate) return
+    const info = computeCycleInfo(cycleStartDate, todayStr)
+    const nextScore = scoreDailyBehaviors(nextBehaviors)
+    const now = currentTimestamp()
+    const record = {
+      date: todayStr, ...info, behaviors: nextBehaviors, behaviorSources: nextSources,
+      symptoms: DEFAULT_SYMPTOMS, score: nextScore,
+      achieved: nextScore === TODAY_BEHAVIORS.length,
+      memo: memo.trim() || undefined, updatedAt: now,
+    }
+    if (logId) await db.dailyHealthLogs.update(logId, record)
+    else setLogId(await db.dailyHealthLogs.add({ ...record, createdAt: now }) as number)
+  }
+
+  const restoreAutomaticValues = () => {
+    setBehaviors(automaticBehaviors)
+    setBehaviorSources(automaticSources)
+    void persistBehaviors(automaticBehaviors, automaticSources)
   }
 
   const toggleBehavior = (key: keyof DailyBehavior) => {
-    setBehaviors(previous => ({ ...previous, [key]: !previous[key] }))
-    setBehaviorSources(previous => ({ ...previous, [key]: 'MANUAL' }))
+    const nextBehaviors = { ...behaviors, [key]: !behaviors[key] }
+    const nextSources = { ...behaviorSources, [key]: 'MANUAL' as const }
+    setBehaviors(nextBehaviors)
+    setBehaviorSources(nextSources)
+    void persistBehaviors(nextBehaviors, nextSources)
   }
 
   const save = async () => {
@@ -332,7 +371,10 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
       <div className="bg-white border border-gray-100 rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-semibold text-gray-900">오늘 단백질</p>
-          <button onClick={() => setShowTargets(true)} className="text-xs text-indigo-500">목표 설정</button>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setShowProfile(true)} className="text-xs text-emerald-600">프로필</button>
+            <button onClick={() => setShowTargets(true)} className="text-xs text-indigo-500">목표 설정</button>
+          </div>
         </div>
         {targets ? (
           <>
@@ -365,7 +407,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-gray-900">🍽 오늘 식단 현황</p>
             <button
-              onClick={autoFillFromMeals}
+              onClick={restoreAutomaticValues}
               className="text-xs text-indigo-500 border border-indigo-400/30 px-2.5 py-1 rounded-lg active:bg-indigo-500/10"
             >
               행동 자동 반영
@@ -441,6 +483,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
       </div>
 
       <HealthConnectCard />
+      <HealthSnapshotCard />
 
       {/* 오늘 식사 가이드 */}
       <div className="bg-white border border-gray-100 rounded-2xl p-4">
@@ -483,7 +526,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
             }`}>
               {completedCount}/5
             </span>
-            <button onClick={autoFillFromMeals} className="text-[11px] text-indigo-500">자동값 복원</button>
+            <button onClick={restoreAutomaticValues} className="text-[11px] text-indigo-500">자동값 복원</button>
           </div>
         </div>
 
@@ -557,6 +600,18 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
           onSaved={value => {
             setTargets(value)
             load()
+          }}
+        />
+      ) : null}
+      {showProfile ? (
+        <BodyProfileSheet
+          current={profile}
+          currentTargets={targets}
+          onClose={() => setShowProfile(false)}
+          onSaved={(nextProfile, nextTargets) => {
+            setProfile(nextProfile)
+            if (nextTargets) setTargets(nextTargets)
+            void load()
           }}
         />
       ) : null}

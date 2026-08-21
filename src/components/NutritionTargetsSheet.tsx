@@ -65,6 +65,7 @@ export default function NutritionTargetsSheet({ current, onClose, onSaved }: Pro
       carbohydrateMaxGrams: carbohydrateMax,
       vegetableTargetGrams: optionalNumber(form.vegetableTarget),
       exerciseMinutes: optionalNumber(form.exerciseMinutes),
+      source: 'MANUAL',
       createdAt: current?.createdAt ?? now,
       updatedAt: now,
     }
