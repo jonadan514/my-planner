@@ -70,7 +70,9 @@ export default function InBodyTab() {
     setRecords(all)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  // Dexie 조회가 완료된 뒤 상태를 갱신하는 비동기 로더입니다.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void load() }, [load])
 
   const handleScreenshot = async (file: File) => {
     setOcrPreview(prev => {
@@ -137,14 +139,14 @@ export default function InBodyTab() {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
         <defs>
           <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#6366f1" stopOpacity="0.25"/>
-            <stop offset="100%" stopColor="#6366f1" stopOpacity="0"/>
+            <stop offset="0%"   stopColor="#16a34a" stopOpacity="0.25"/>
+            <stop offset="100%" stopColor="#16a34a" stopOpacity="0"/>
           </linearGradient>
         </defs>
         <path d={area} fill="url(#cg)"/>
-        <path d={path} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <circle cx={last[0]} cy={last[1]} r="4" fill="#6366f1"/>
-        <text x={last[0]} y={last[1] - 8} textAnchor="middle" fontSize="9" fill="#6366f1" fontWeight="600">
+        <path d={path} fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx={last[0]} cy={last[1]} r="4" fill="#16a34a"/>
+        <text x={last[0]} y={last[1] - 8} textAnchor="middle" fontSize="9" fill="#16a34a" fontWeight="600">
           {chartData[chartData.length - 1].toFixed(1)}
         </text>
         <text x={pad} y={H - 2}  fontSize="8" fill="#9ca3af">{minV.toFixed(1)}</text>
@@ -174,7 +176,7 @@ export default function InBodyTab() {
               setMatched([])
               setShowForm(true)
             }}
-            className="h-10 px-3 text-sm bg-indigo-500 text-white rounded-xl active:bg-indigo-600 font-medium"
+            className="h-10 px-3 text-sm bg-emerald-500 text-white rounded-xl active:bg-emerald-600 font-medium"
           >
             + 직접입력
           </button>
@@ -217,7 +219,7 @@ export default function InBodyTab() {
             key={m}
             onClick={() => setMetric(m)}
             className={`flex-1 py-2.5 text-sm rounded-xl font-medium transition-colors ${
-              metric === m ? 'bg-indigo-500 text-white' : 'text-gray-400'
+              metric === m ? 'bg-emerald-500 text-white' : 'text-gray-400'
             }`}
           >
             {METRIC_LABELS[m]}
@@ -274,9 +276,9 @@ export default function InBodyTab() {
             </div>
 
             {ocrStatus === 'processing' && (
-              <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-3 flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin shrink-0" />
-                <p className="text-sm text-indigo-500">스크린샷 분석 중...</p>
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex items-center gap-3">
+                <div className="w-5 h-5 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin shrink-0" />
+                <p className="text-sm text-emerald-500">스크린샷 분석 중...</p>
               </div>
             )}
 
@@ -308,7 +310,7 @@ export default function InBodyTab() {
               <label className="text-sm text-gray-500 mb-1.5 block">측정일</label>
               <input
                 type="date"
-                className="w-full bg-gray-100 rounded-xl px-4 py-3 text-gray-900 outline-none focus:ring-1 ring-indigo-500"
+                className="w-full bg-gray-100 rounded-xl px-4 py-3 text-gray-900 outline-none focus:ring-1 ring-emerald-500"
                 value={form.date}
                 onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
               />
@@ -329,7 +331,7 @@ export default function InBodyTab() {
                       type="number"
                       inputMode="decimal"
                       step={f.step}
-                      className={`w-full bg-gray-100 rounded-xl px-3 py-3 text-gray-900 outline-none focus:ring-1 ring-indigo-500 ${
+                      className={`w-full bg-gray-100 rounded-xl px-3 py-3 text-gray-900 outline-none focus:ring-1 ring-emerald-500 ${
                         isAuto ? 'ring-1 ring-emerald-500/50' : ''
                       }`}
                       value={val ?? ''}
@@ -347,7 +349,7 @@ export default function InBodyTab() {
             <button
               onClick={save}
               disabled={ocrStatus === 'processing'}
-              className="w-full py-3.5 rounded-xl bg-indigo-500 text-white font-semibold text-base active:bg-indigo-600 disabled:opacity-50"
+              className="w-full py-3.5 rounded-xl bg-emerald-500 text-white font-semibold text-base active:bg-emerald-600 disabled:opacity-50"
             >
               저장
             </button>

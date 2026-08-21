@@ -49,7 +49,7 @@ export default function EventModal({ date, event, colors, onClose, onSave, onDel
         </div>
 
         <input
-          className="w-full bg-gray-100 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:ring-1 ring-indigo-500"
+          className="w-full bg-gray-100 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:ring-1 ring-emerald-500"
           placeholder="제목"
           value={title}
           onChange={e => setTitle(e.target.value)}
@@ -108,7 +108,7 @@ export default function EventModal({ date, event, colors, onClose, onSave, onDel
           )}
           <button
             onClick={handleSave}
-            className="flex-1 py-3 rounded-xl bg-indigo-500 text-white font-medium"
+            className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-medium"
           >
             저장
           </button>

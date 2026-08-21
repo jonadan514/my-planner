@@ -1,4 +1,4 @@
-import React from 'react'
+import type { ReactElement } from 'react'
 import type { TabId } from '../App'
 
 interface Props {
@@ -47,37 +47,16 @@ function BodyIcon() {
   )
 }
 
-function WalletIcon() {
-  return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="7" width="20" height="14" rx="2"/>
-      <path d="M16 7V5a2 2 0 00-2-2H8a2 2 0 00-2 2v2"/>
-      <circle cx="16" cy="14" r="1.5" fill="currentColor" stroke="none"/>
-    </svg>
-  )
-}
-
-function CheckSquareIcon() {
-  return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="3"/>
-      <path d="M8 12l3 3 6-6"/>
-    </svg>
-  )
-}
-
-const TABS: Array<{ id: TabId; label: string; Icon: () => React.ReactElement; color: string }> = [
-  { id: 'home',     label: '홈',    Icon: HomeIcon,         color: '#6366f1' },
-  { id: 'calendar', label: '달력',  Icon: CalendarIcon,     color: '#8b5cf6' },
-  { id: 'health',   label: '건강',  Icon: HeartIcon,        color: '#f43f5e' },
-  { id: 'body',     label: '몸개선', Icon: BodyIcon,         color: '#10b981' },
-  { id: 'ledger',   label: '가계부', Icon: WalletIcon,       color: '#f59e0b' },
-  { id: 'todo',     label: '할일',  Icon: CheckSquareIcon,  color: '#0ea5e9' },
+const TABS: Array<{ id: TabId; label: string; Icon: () => ReactElement; color: string }> = [
+  { id: 'home',     label: '홈',    Icon: HomeIcon,     color: '#15803d' },
+  { id: 'calendar', label: '달력',  Icon: CalendarIcon, color: '#16a34a' },
+  { id: 'health',   label: '건강',  Icon: HeartIcon,    color: '#059669' },
+  { id: 'body',     label: '몸개선', Icon: BodyIcon,     color: '#0d9488' },
 ]
 
 export default function BottomNav({ active, onChange }: Props) {
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white/95 backdrop-blur-xl border-t border-gray-200 z-50 bottom-nav-safe">
+    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 border-t border-emerald-100 bg-white/95 backdrop-blur-xl bottom-nav-safe">
       <div className="flex">
         {TABS.map(({ id, label, Icon, color }) => {
           const isActive = active === id

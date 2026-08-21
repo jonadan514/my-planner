@@ -10,7 +10,7 @@ import { getShiftForDate } from '../utils/shift'
 import EventModal from '../components/EventModal'
 import ShiftSettingsModal from '../components/ShiftSettingsModal'
 
-const COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#10b981', '#f43f5e', '#a78bfa', '#fb923c']
+const COLORS = ['#16a34a', '#0d9488', '#f59e0b', '#22c55e', '#f43f5e', '#84cc16', '#fb923c']
 
 export default function CalendarPage() {
   const [viewDate, setViewDate] = useState(new Date())
@@ -111,12 +111,12 @@ export default function CalendarPage() {
               onClick={() => inMonth && setSelected(ds)}
               disabled={!inMonth}
               className={`flex flex-col items-center py-1.5 rounded-xl min-h-[58px] transition-colors ${
-                isSelected ? 'bg-indigo-500/15' : 'active:bg-gray-100'
+                isSelected ? 'bg-emerald-500/15' : 'active:bg-gray-100'
               } ${!inMonth ? 'opacity-20' : ''}`}
             >
               <span className={`w-8 h-8 flex items-center justify-center rounded-full text-[13px] font-semibold ${
                 isToday(day)
-                  ? 'bg-indigo-500 text-white'
+                  ? 'bg-emerald-500 text-white'
                   : dow === 0 ? 'text-red-400' : dow === 6 ? 'text-blue-400' : 'text-gray-700'
               }`}>
                 {format(day, 'd')}
@@ -132,7 +132,7 @@ export default function CalendarPage() {
               {evts.length > 0 && (
                 <div className="flex gap-0.5 mt-0.5 flex-wrap justify-center">
                   {evts.slice(0, 3).map((e, i) => (
-                    <span key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: e.color || '#6366f1' }} />
+                    <span key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: e.color || '#16a34a' }} />
                   ))}
                 </div>
               )}
@@ -149,7 +149,7 @@ export default function CalendarPage() {
           </p>
           <button
             onClick={() => { setEditEvent(null); setShowModal(true) }}
-            className="h-9 px-3 text-sm bg-indigo-500 text-white rounded-xl active:bg-indigo-600 font-medium"
+            className="h-9 px-3 text-sm bg-emerald-500 text-white rounded-xl active:bg-emerald-600 font-medium"
           >
             + 추가
           </button>
@@ -165,7 +165,7 @@ export default function CalendarPage() {
                 onClick={() => { setEditEvent(e); setShowModal(true) }}
                 className="rounded-2xl p-4 bg-white border border-gray-100 flex items-start gap-3 active:bg-gray-50"
               >
-                <div className="w-1 rounded-full self-stretch shrink-0" style={{ background: e.color || '#6366f1' }} />
+                <div className="w-1 rounded-full self-stretch shrink-0" style={{ background: e.color || '#16a34a' }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] text-gray-900">{e.title}</p>
                   {(e.startTime || e.endTime) && (

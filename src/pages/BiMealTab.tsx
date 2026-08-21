@@ -306,7 +306,7 @@ function MealAddSheet({ date, shiftType, presets, currentSummary, targets, initi
                 key={t}
                 onClick={() => set('mealType', t)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  form.mealType === t ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'
+                  form.mealType === t ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'
                 }`}
               >
                 {MEAL_TYPE_LABELS[t]}
@@ -326,7 +326,7 @@ function MealAddSheet({ date, shiftType, presets, currentSummary, targets, initi
                   onClick={() => applyPreset(p)}
                   className={`w-full px-3 py-2.5 rounded-xl text-left border ${
                     selectedPreset?.id === p.id
-                      ? 'bg-indigo-500/10 text-indigo-700 border-indigo-500/30'
+                      ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/30'
                       : 'bg-gray-50 text-gray-600 border-gray-100'
                   }`}
                 >
@@ -346,9 +346,9 @@ function MealAddSheet({ date, shiftType, presets, currentSummary, targets, initi
         )}
 
         {selectedPreset && (
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2.5">
-            <p className="text-xs font-semibold text-indigo-700">{selectedPreset.name} 적용됨</p>
-            <p className="text-[11px] text-indigo-500 mt-0.5">아래 실제 섭취량을 바꿔도 이 기록에만 반영됩니다.</p>
+          <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5">
+            <p className="text-xs font-semibold text-emerald-700">{selectedPreset.name} 적용됨</p>
+            <p className="text-[11px] text-emerald-500 mt-0.5">아래 실제 섭취량을 바꿔도 이 기록에만 반영됩니다.</p>
           </div>
         )}
 
@@ -361,7 +361,7 @@ function MealAddSheet({ date, shiftType, presets, currentSummary, targets, initi
                 key={s}
                 onClick={() => set('proteinSource', form.proteinSource === s ? '' : s)}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  form.proteinSource === s ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'
+                  form.proteinSource === s ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'
                 }`}
               >
                 {PROTEIN_SOURCE_LABELS[s]}
@@ -421,7 +421,7 @@ function MealAddSheet({ date, shiftType, presets, currentSummary, targets, initi
             <p className="text-xs text-gray-400 mb-1.5">영양정보 출처</p>
             <div className="flex gap-1.5 flex-wrap">
               {NUTRITION_SOURCES.map(source => (
-                <button key={source} onClick={() => set('nutritionSource', source)} className={`px-2.5 py-1.5 rounded-lg text-xs ${form.nutritionSource === source ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                <button key={source} onClick={() => set('nutritionSource', source)} className={`px-2.5 py-1.5 rounded-lg text-xs ${form.nutritionSource === source ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
                   {NUTRITION_SOURCE_LABELS[source]}
                 </button>
               ))}
@@ -433,7 +433,7 @@ function MealAddSheet({ date, shiftType, presets, currentSummary, targets, initi
           <p className="text-xs text-gray-400 mb-1.5">식사 품질 분류</p>
           <div className="grid grid-cols-2 gap-1.5">
             {QUALITY_TYPES.map(quality => (
-              <button key={quality} onClick={() => set('qualityType', quality)} className={`px-2.5 py-2 rounded-lg text-xs ${form.qualityType === quality ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+              <button key={quality} onClick={() => set('qualityType', quality)} className={`px-2.5 py-2 rounded-lg text-xs ${form.qualityType === quality ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
                 {QUALITY_LABELS[quality]}
               </button>
             ))}
@@ -456,7 +456,7 @@ function MealAddSheet({ date, shiftType, presets, currentSummary, targets, initi
 
         {selectedPreset && (
           <button onClick={() => setSaveBackToPreset(value => !value)} className="flex items-center gap-2 text-xs text-gray-500">
-            <span className={`w-4 h-4 rounded flex items-center justify-center ${saveBackToPreset ? 'bg-indigo-500 text-white' : 'bg-gray-200'}`}>{saveBackToPreset ? '✓' : ''}</span>
+            <span className={`w-4 h-4 rounded flex items-center justify-center ${saveBackToPreset ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}>{saveBackToPreset ? '✓' : ''}</span>
             수정한 값을 프리셋에도 저장
           </button>
         )}
@@ -497,10 +497,10 @@ function MealAddSheet({ date, shiftType, presets, currentSummary, targets, initi
         <button
           onClick={() => set('isPlannedMeal', !form.isPlannedMeal)}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border ${
-            form.isPlannedMeal ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-600' : 'bg-gray-50 border-gray-200 text-gray-400'
+            form.isPlannedMeal ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600' : 'bg-gray-50 border-gray-200 text-gray-400'
           }`}
         >
-          <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${form.isPlannedMeal ? 'bg-indigo-500 text-white' : 'bg-gray-200'}`}>
+          <span className={`w-3.5 h-3.5 rounded flex items-center justify-center text-[10px] ${form.isPlannedMeal ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}>
             {form.isPlannedMeal ? '✓' : ''}
           </span>
           계획한 식사
@@ -520,7 +520,7 @@ function MealAddSheet({ date, shiftType, presets, currentSummary, targets, initi
 
         <button
           onClick={save}
-          className="w-full py-3.5 rounded-xl bg-indigo-500 text-white font-semibold active:bg-indigo-600"
+          className="w-full py-3.5 rounded-xl bg-emerald-500 text-white font-semibold active:bg-emerald-600"
         >
           저장
         </button>
@@ -637,7 +637,7 @@ function PresetSheet({ initial, onSave, onClose }: PresetSheetProps) {
           <label className="text-xs text-gray-400 block mb-1">프리셋 이름 *</label>
           <input
             autoFocus
-            className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none text-sm focus:ring-1 ring-indigo-500"
+            className="w-full bg-gray-100 rounded-xl px-3 py-2.5 text-gray-900 placeholder-gray-400 outline-none text-sm focus:ring-1 ring-emerald-500"
             placeholder="예: 닭가슴살 식단"
             value={form.name}
             onChange={e => set('name', e.target.value)}
@@ -652,7 +652,7 @@ function PresetSheet({ initial, onSave, onClose }: PresetSheetProps) {
                 key={t}
                 onClick={() => set('mealType', form.mealType === t ? '' : t)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  form.mealType === t ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'
+                  form.mealType === t ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'
                 }`}
               >
                 {MEAL_TYPE_LABELS[t]}
@@ -669,7 +669,7 @@ function PresetSheet({ initial, onSave, onClose }: PresetSheetProps) {
                 key={s}
                 onClick={() => set('proteinSource', form.proteinSource === s ? '' : s)}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  form.proteinSource === s ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'
+                  form.proteinSource === s ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'
                 }`}
               >
                 {PROTEIN_SOURCE_LABELS[s]}
@@ -731,7 +731,7 @@ function PresetSheet({ initial, onSave, onClose }: PresetSheetProps) {
           </div>
           <div className="flex gap-1.5 flex-wrap">
             {NUTRITION_SOURCES.map(source => (
-              <button key={source} onClick={() => set('nutritionSource', source)} className={`px-2.5 py-1.5 rounded-lg text-xs ${form.nutritionSource === source ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+              <button key={source} onClick={() => set('nutritionSource', source)} className={`px-2.5 py-1.5 rounded-lg text-xs ${form.nutritionSource === source ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
                 {NUTRITION_SOURCE_LABELS[source]}
               </button>
             ))}
@@ -742,7 +742,7 @@ function PresetSheet({ initial, onSave, onClose }: PresetSheetProps) {
           <label className="text-xs text-gray-400 block mb-2">식사 품질 분류</label>
           <div className="grid grid-cols-2 gap-1.5">
             {QUALITY_TYPES.map(quality => (
-              <button key={quality} onClick={() => set('qualityType', quality)} className={`px-2.5 py-2 rounded-lg text-xs ${form.qualityType === quality ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+              <button key={quality} onClick={() => set('qualityType', quality)} className={`px-2.5 py-2 rounded-lg text-xs ${form.qualityType === quality ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
                 {QUALITY_LABELS[quality]}
               </button>
             ))}
@@ -766,7 +766,7 @@ function PresetSheet({ initial, onSave, onClose }: PresetSheetProps) {
                 key={m}
                 onClick={() => set('cookingMethod', m)}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  form.cookingMethod === m ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'
+                  form.cookingMethod === m ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'
                 }`}
               >
                 {COOKING_METHOD_LABELS[m]}
@@ -785,7 +785,7 @@ function PresetSheet({ initial, onSave, onClose }: PresetSheetProps) {
 
         <button
           onClick={save}
-          className="w-full py-3.5 rounded-xl bg-indigo-500 text-white font-semibold active:bg-indigo-600"
+          className="w-full py-3.5 rounded-xl bg-emerald-500 text-white font-semibold active:bg-emerald-600"
         >
           저장
         </button>
@@ -825,8 +825,11 @@ function RecordTab() {
     })()
   }, [date])
 
-  useEffect(() => { loadMeals() },  [loadMeals])
-  useEffect(() => { loadPresets() }, [loadPresets])
+  // Dexie 조회가 완료된 뒤 상태를 갱신하는 비동기 로더입니다.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void loadMeals() },  [loadMeals])
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void loadPresets() }, [loadPresets])
   useEffect(() => {
     db.nutritionTargets.toCollection().last().then(value => setTargets(value ?? null))
   }, [])
@@ -851,7 +854,7 @@ function RecordTab() {
         {date !== todayStr && (
           <button
             onClick={() => setDate(todayStr)}
-            className="text-xs text-indigo-500 border border-indigo-400/30 px-3 py-2 rounded-xl"
+            className="text-xs text-emerald-500 border border-emerald-400/30 px-3 py-2 rounded-xl"
           >
             오늘
           </button>
@@ -937,7 +940,7 @@ function RecordTab() {
         <div className="bg-white border border-gray-100 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold text-gray-500">일일 기준</p>
-            {!targets ? <button onClick={() => setShowTargets(true)} className="text-xs text-indigo-500">기준 설정</button> : null}
+            {!targets ? <button onClick={() => setShowTargets(true)} className="text-xs text-emerald-500">기준 설정</button> : null}
           </div>
           <div className="grid grid-cols-3 gap-2">
             {([
@@ -963,7 +966,7 @@ function RecordTab() {
             <li key={m.id} className="bg-white border border-gray-100 rounded-xl px-4 py-3 flex items-start gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] bg-indigo-500/10 text-indigo-600 px-2 py-0.5 rounded-md font-medium shrink-0">
+                  <span className="text-[11px] bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-md font-medium shrink-0">
                     {MEAL_TYPE_LABELS[m.mealType]}
                   </span>
                   {m.time && <span className="text-xs text-gray-400">{m.time}</span>}
@@ -981,7 +984,7 @@ function RecordTab() {
               </div>
               <button
                 onClick={() => { setEditingMeal(m); setShowAdd(true) }}
-                className="text-xs text-indigo-400 shrink-0 px-1 py-1"
+                className="text-xs text-emerald-400 shrink-0 px-1 py-1"
               >수정</button>
               <button
                 onClick={() => m.id && deleteMeal(m.id)}
@@ -995,7 +998,7 @@ function RecordTab() {
       {/* 추가 버튼 */}
       <button
         onClick={() => { setEditingMeal(undefined); setShowAdd(true) }}
-        className="w-full py-3 rounded-2xl bg-indigo-500 text-white font-semibold text-sm active:bg-indigo-600"
+        className="w-full py-3 rounded-2xl bg-emerald-500 text-white font-semibold text-sm active:bg-emerald-600"
       >
         + 식사 추가
       </button>
@@ -1049,7 +1052,7 @@ const TIMING_REF = [
     ],
   },
   {
-    shift: '야간 근무', color: '#6366f1',
+    shift: '야간 근무', color: '#0f766e',
     items: [
       { time: '18:50', label: '주 식사 (근무 전)' },
       { time: '근무 중', label: '카페인: 이탈 전 금지' },
@@ -1100,7 +1103,7 @@ function ReferenceTab() {
             key={id}
             onClick={() => setSub(id)}
             className={`flex-1 py-2 text-xs rounded-lg font-medium transition-colors ${
-              sub === id ? 'bg-indigo-500 text-white' : 'text-gray-400'
+              sub === id ? 'bg-emerald-500 text-white' : 'text-gray-400'
             }`}
           >
             {label}
@@ -1125,7 +1128,7 @@ function ReferenceTab() {
                 </div>
                 <div>
                   <span className="text-gray-400 block mb-0.5">단백질 함량</span>
-                  <span className="text-indigo-600 font-medium">{p.protein}</span>
+                  <span className="text-emerald-600 font-medium">{p.protein}</span>
                 </div>
               </div>
             </div>
@@ -1138,7 +1141,7 @@ function ReferenceTab() {
               {DEFENSE_SNACKS.map(s => (
                 <div key={s.name} className="flex items-baseline justify-between gap-2">
                   <span className="text-xs text-gray-700">{s.name}</span>
-                  <span className="text-[11px] text-indigo-600 font-medium shrink-0">{s.protein}</span>
+                  <span className="text-[11px] text-emerald-600 font-medium shrink-0">{s.protein}</span>
                 </div>
               ))}
             </div>
@@ -1173,8 +1176,8 @@ function ReferenceTab() {
                 <p className="text-gray-900 font-semibold text-sm">{c.method}</p>
               </div>
               <p className="text-gray-500 text-xs mb-1.5">{c.desc}</p>
-              <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-3 py-2">
-                <p className="text-indigo-600 text-xs">💡 {c.tip}</p>
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+                <p className="text-emerald-600 text-xs">💡 {c.tip}</p>
               </div>
             </div>
           ))}
@@ -1198,7 +1201,9 @@ function PresetTab() {
     setPresets(list)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  // Dexie 조회가 완료된 뒤 상태를 갱신하는 비동기 로더입니다.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void load() }, [load])
 
   const del = async (id: number) => {
     await db.mealPresets.delete(id)
@@ -1210,7 +1215,7 @@ function PresetTab() {
     <div className="space-y-3">
       <button
         onClick={() => { setEditing(undefined); setShowAdd(true) }}
-        className="w-full py-3 rounded-2xl bg-indigo-500 text-white font-semibold text-sm active:bg-indigo-600"
+        className="w-full py-3 rounded-2xl bg-emerald-500 text-white font-semibold text-sm active:bg-emerald-600"
       >
         + 프리셋 추가
       </button>
@@ -1237,7 +1242,7 @@ function PresetTab() {
                 <div className="flex gap-2 shrink-0">
                   <button
                     onClick={() => { setEditing(p); setShowAdd(true) }}
-                    className="text-xs text-indigo-500 border border-indigo-400/30 px-2.5 py-1 rounded-lg"
+                    className="text-xs text-emerald-500 border border-emerald-400/30 px-2.5 py-1 rounded-lg"
                   >수정</button>
                   <button
                     onClick={() => p.id && del(p.id)}
@@ -1254,7 +1259,7 @@ function PresetTab() {
                 {p.riceCookedGrams && <span>밥 {p.riceCookedGrams}g</span>}
                 {p.vegetableGrams && <span>채소 {p.vegetableGrams}g</span>}
                 <span className="text-gray-300">{COOKING_METHOD_LABELS[p.cookingMethod]}</span>
-                <span className="text-indigo-400">{QUALITY_LABELS[p.qualityType ?? 'UNCLASSIFIED']}</span>
+                <span className="text-emerald-400">{QUALITY_LABELS[p.qualityType ?? 'UNCLASSIFIED']}</span>
                 <span className="text-sky-500">{NUTRITION_SOURCE_LABELS[p.nutritionSource ?? 'USER_DEFINED']}</span>
               </div>
             </li>
@@ -1294,7 +1299,7 @@ export default function BiMealTab() {
             key={id}
             onClick={() => setSub(id)}
             className={`flex-1 py-2.5 text-xs rounded-xl font-medium transition-colors ${
-              sub === id ? 'bg-indigo-500 text-white' : 'text-gray-400'
+              sub === id ? 'bg-emerald-500 text-white' : 'text-gray-400'
             }`}
           >
             {label}

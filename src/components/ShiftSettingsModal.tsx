@@ -14,7 +14,7 @@ const PRESETS = [
       ...Array.from({ length: 7  }, () => ({ label: '주간', color: '#f59e0b' })),
       ...Array.from({ length: 14 }, (_, i) =>
         i % 2 === 0
-          ? { label: '야간', color: '#6366f1' }
+          ? { label: '야간', color: '#0f766e' }
           : { label: '비번', color: '#6b7280' }
       ),
     ],
@@ -27,10 +27,10 @@ const PRESETS = [
     pattern: [
       { label: '주간', color: '#f59e0b' },
       { label: '주간', color: '#f59e0b' },
-      { label: '야간', color: '#6366f1' },
+      { label: '야간', color: '#0f766e' },
       { label: '비번', color: '#22d3ee' },
       { label: '휴무', color: '#10b981' },
-      { label: '야간', color: '#6366f1' },
+      { label: '야간', color: '#0f766e' },
       { label: '비번', color: '#22d3ee' },
       { label: '휴무', color: '#10b981' },
     ],
@@ -118,7 +118,7 @@ export default function ShiftSettingsModal({ current, onClose, onSaved }: Props)
               key={p.id}
               onClick={() => handlePresetChange(p.id)}
               className={`flex-1 py-2.5 text-sm rounded-lg font-medium transition-colors ${
-                selectedId === p.id ? 'bg-indigo-500 text-white' : 'text-gray-400'
+                selectedId === p.id ? 'bg-emerald-500 text-white' : 'text-gray-400'
               }`}
             >
               {p.name}
@@ -188,11 +188,11 @@ export default function ShiftSettingsModal({ current, onClose, onSaved }: Props)
           <div className="grid grid-cols-7 gap-1">
             {previewDays.map(({ date, shift }, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
-                <span className={`text-[10px] ${i === 0 ? 'text-indigo-500 font-semibold' : 'text-gray-400'}`}>
+                <span className={`text-[10px] ${i === 0 ? 'text-emerald-500 font-semibold' : 'text-gray-400'}`}>
                   {format(date, 'EEE', { locale: ko })}
                 </span>
                 <div
-                  className={`w-full py-1.5 rounded-lg flex items-center justify-center ${i === 0 ? 'ring-1 ring-indigo-400/40' : ''}`}
+                  className={`w-full py-1.5 rounded-lg flex items-center justify-center ${i === 0 ? 'ring-1 ring-emerald-400/40' : ''}`}
                   style={{ background: shift.color + '28' }}
                 >
                   <span className="text-[10px] font-bold" style={{ color: shift.color }}>
@@ -213,7 +213,7 @@ export default function ShiftSettingsModal({ current, onClose, onSaved }: Props)
             <p className="text-xs text-gray-500">추가 휴무</p>
             <button
               onClick={() => setShowHolidayInput(v => !v)}
-              className="text-xs text-indigo-500 border border-indigo-400/30 px-2.5 py-1 rounded-lg active:bg-indigo-500/10"
+              className="text-xs text-emerald-500 border border-emerald-400/30 px-2.5 py-1 rounded-lg active:bg-emerald-500/10"
             >
               + 날짜 추가
             </button>
@@ -223,7 +223,7 @@ export default function ShiftSettingsModal({ current, onClose, onSaved }: Props)
             <input
               type="date"
               autoFocus
-              className="w-full bg-gray-100 rounded-xl px-4 py-2.5 text-gray-900 outline-none mb-2 focus:ring-1 ring-indigo-500"
+              className="w-full bg-gray-100 rounded-xl px-4 py-2.5 text-gray-900 outline-none mb-2 focus:ring-1 ring-emerald-500"
               onChange={e => addHoliday(e.target.value)}
             />
           )}
@@ -252,7 +252,7 @@ export default function ShiftSettingsModal({ current, onClose, onSaved }: Props)
         {/* 저장 */}
         <button
           onClick={save}
-          className="w-full py-3 rounded-xl bg-indigo-500 text-white font-semibold text-base active:bg-indigo-600"
+          className="w-full py-3 rounded-xl bg-emerald-500 text-white font-semibold text-base active:bg-emerald-600"
         >
           저장
         </button>

@@ -135,7 +135,7 @@ export default function WorkoutTab() {
       {/* 추가 버튼 */}
       <button
         onClick={() => setShowForm(v => !v)}
-        className="w-full py-3 rounded-2xl bg-indigo-500 text-white font-semibold text-sm mb-5 active:bg-indigo-600"
+        className="w-full py-3 rounded-2xl bg-emerald-500 text-white font-semibold text-sm mb-5 active:bg-emerald-600"
       >
         + 운동 기록 추가
       </button>
@@ -161,7 +161,7 @@ export default function WorkoutTab() {
                 key={t}
                 onClick={() => { setWType(t); setCategory(t === 'cardio' ? '유산소' : '가슴') }}
                 className={`flex-1 py-2 text-xs rounded-lg font-medium transition-colors ${
-                  wType === t ? 'bg-indigo-500 text-white' : 'text-gray-400'
+                  wType === t ? 'bg-emerald-500 text-white' : 'text-gray-400'
                 }`}
               >
                 {t === 'weight' ? '웨이트' : '유산소'}
@@ -178,7 +178,7 @@ export default function WorkoutTab() {
                   key={c}
                   onClick={() => setCategory(c)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    category === c ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500'
+                    category === c ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'
                   }`}
                 >
                   {c}
@@ -259,7 +259,7 @@ export default function WorkoutTab() {
             </button>
             <button
               onClick={save}
-              className="flex-1 py-2.5 rounded-xl bg-indigo-500 text-white text-sm font-semibold active:bg-indigo-600"
+              className="flex-1 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-semibold active:bg-emerald-600"
             >
               저장
             </button>
@@ -285,7 +285,7 @@ export default function WorkoutTab() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-md shrink-0 ${e.origin === 'HEALTH_CONNECT' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-500/15 text-indigo-500'}`}>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-md shrink-0 ${e.origin === 'HEALTH_CONNECT' ? 'bg-emerald-50 text-emerald-600' : 'bg-emerald-500/15 text-emerald-500'}`}>
                           {e.origin === 'HEALTH_CONNECT' ? 'Samsung Health' : e.category}
                         </span>
                         <span className="text-sm text-gray-900 font-medium truncate">{e.name}</span>

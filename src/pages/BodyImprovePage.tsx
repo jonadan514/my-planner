@@ -24,7 +24,7 @@ export default function BodyImprovePage() {
               key={id}
               onClick={() => setSub(id)}
               className={`flex-1 py-2.5 text-xs rounded-xl font-medium transition-colors ${
-                sub === id ? 'bg-indigo-500 text-white' : 'text-gray-400'
+                sub === id ? 'bg-emerald-500 text-white' : 'text-gray-400'
               }`}
             >
               {label}

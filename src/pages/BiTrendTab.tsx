@@ -8,7 +8,7 @@ type TrendJudgement = 'on_track' | 'normal' | 'apply_lever' | 'check_records'
 
 const TREND_INFO: Record<TrendJudgement, { label: string; color: string; desc: string; lever?: string }> = {
   on_track:      { label: '✅ 순조롭게 진행 중',  color: '#10b981', desc: '4주 기준 -2kg 이상 감소. 현재 방식을 유지하세요.' },
-  normal:        { label: '📊 정상 진행',         color: '#6366f1', desc: '4주 기준 -1~-2kg 감소. 기록을 꾸준히 이어가세요.' },
+  normal:        { label: '📊 정상 진행',         color: '#16a34a', desc: '4주 기준 -1~-2kg 감소. 기록을 꾸준히 이어가세요.' },
   apply_lever:   { label: '⚙️ 조절 레버 검토',    color: '#f59e0b', desc: '4주 기준 -1kg 미만 감소. 행동 점수 4점 이상이면 아래 레버를 순서대로 적용해 보세요.', lever: 'lever' },
   check_records: { label: '🔍 기록 정확도 점검',  color: '#ef4444', desc: '체중 변화가 없거나 증가했습니다. 식단 기록이 정확한지 먼저 확인하세요.' },
 }
@@ -99,7 +99,7 @@ function MiniLineChart({ measurements }: { measurements: WeeklyMeasurement[] }) 
       {/* Trend line */}
       <polyline
         fill="none"
-        stroke="#6366f1"
+        stroke="#16a34a"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -114,7 +114,7 @@ function MiniLineChart({ measurements }: { measurements: WeeklyMeasurement[] }) 
           cy={cy(p.weightKg as number)}
           r="3.5"
           fill="white"
-          stroke="#6366f1"
+          stroke="#16a34a"
           strokeWidth="2"
         />
       ))}
@@ -139,7 +139,9 @@ export default function BiTrendTab() {
     setMeasurements(all.reverse())
   }, [])
 
-  useEffect(() => { load() }, [load])
+  // Dexie 조회가 완료된 뒤 상태를 갱신하는 비동기 로더입니다.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { void load() }, [load])
 
   const openAdd = () => {
     setDate(todayStr)
@@ -284,8 +286,8 @@ export default function BiTrendTab() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 mb-1">{title}</p>
                   <p className="text-xs text-gray-500 leading-relaxed mb-2">{desc}</p>
-                  <div className="bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
-                    <p className="text-[11px] text-indigo-700">💡 {tip}</p>
+                  <div className="bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                    <p className="text-[11px] text-emerald-700">💡 {tip}</p>
                   </div>
                 </div>
               </div>

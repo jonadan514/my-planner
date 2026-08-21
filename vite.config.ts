@@ -17,9 +17,9 @@ export default defineConfig({
       manifest: {
         name: 'Prec',
         short_name: 'Prec',
-        description: 'Personal Record — 일상 통합 관리',
-        theme_color: '#6366f1',
-        background_color: '#0f0f0f',
+        description: 'Personal Record — 건강과 몸개선 기록',
+        theme_color: '#166534',
+        background_color: '#eef7f0',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { db } from '../db/database'
 import type { TabId } from '../App'
 import { getShiftForDate } from '../utils/shift'
-import type { Todo, FastingRecord, Event } from '../db/database'
+import type { FastingRecord, Event } from '../db/database'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { canNotify, requestPermission, showShiftNotification } from '../utils/notifications'
@@ -29,17 +29,23 @@ function BriefcaseIcon() {
   )
 }
 
+function BodyIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v3M7.5 5.5L9 8m7.5-2.5L15 8M6 11h12M8 11v4a4 4 0 008 0v-4M10 19l-1 2m5-2 1 2" />
+    </svg>
+  )
+}
+
 export default function HomePage({ onNavigate }: Props) {
   const today = new Date()
   const todayStr = format(today, 'yyyy-MM-dd')
-  const [todos, setTodos] = useState<Todo[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [fasting, setFasting] = useState<FastingRecord | null>(null)
   const [shift, setShift] = useState<{ label: string; color: string } | null>(null)
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    db.todos.where('dueDate').equals(todayStr).filter(t => !t.done).toArray().then(setTodos)
     db.events.where('date').equals(todayStr).toArray().then(setEvents)
     db.fastingRecords.orderBy('startTime').last().then(r => {
       setFasting(r && !r.endTime ? r : null)
@@ -119,14 +125,14 @@ export default function HomePage({ onNavigate }: Props) {
         className="rounded-2xl p-4 mb-3 bg-white border border-gray-100 flex items-center gap-3 active:bg-gray-50"
         onClick={() => onNavigate('health')}
       >
-        <div className="w-10 h-10 rounded-xl bg-indigo-500/15 flex items-center justify-center text-indigo-500 shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center text-emerald-500 shrink-0">
           <ClockIcon />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[11px] text-gray-400">단식</p>
           {fasting ? (
             <>
-              <p className="text-base font-semibold text-indigo-500">
+              <p className="text-base font-semibold text-emerald-500">
                 {elapsedH}h {elapsedM}m 진행중
               </p>
               <p className="text-xs text-gray-400 mt-0.5">목표 {fasting.goalHours}시간</p>
@@ -155,7 +161,7 @@ export default function HomePage({ onNavigate }: Props) {
               <li key={e.id} className="flex items-center gap-2.5">
                 <div
                   className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ background: e.color || '#6366f1' }}
+                  style={{ background: e.color || '#16a34a' }}
                 />
                 <span className="text-sm text-gray-700 flex-1 truncate">{e.title}</span>
                 {e.startTime && (
@@ -170,38 +176,21 @@ export default function HomePage({ onNavigate }: Props) {
         )}
       </div>
 
-      {/* 오늘 할일 */}
-      <div
-        className="rounded-2xl p-4 bg-white border border-gray-100 active:bg-gray-50"
-        onClick={() => onNavigate('todo')}
+      {/* 몸개선 바로가기 */}
+      <button
+        type="button"
+        className="flex w-full items-center gap-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-green-50 p-4 text-left active:bg-emerald-100"
+        onClick={() => onNavigate('body')}
       >
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-gray-900">오늘 할일</p>
-          <div className="flex items-center gap-2">
-            {todos.length > 0 && (
-              <span className="text-xs bg-indigo-500/15 text-indigo-500 px-2 py-0.5 rounded-full">
-                {todos.length}개
-              </span>
-            )}
-            <span className="text-gray-300 text-xl">›</span>
-          </div>
-        </div>
-        {todos.length === 0 ? (
-          <p className="text-gray-300 text-sm">할일이 없습니다</p>
-        ) : (
-          <ul className="space-y-2">
-            {todos.slice(0, 4).map(t => (
-              <li key={t.id} className="flex items-center gap-2.5">
-                <div className="w-4 h-4 rounded-full border border-gray-200 shrink-0" />
-                <span className="text-sm text-gray-700 flex-1 truncate">{t.title}</span>
-              </li>
-            ))}
-            {todos.length > 4 && (
-              <p className="text-xs text-gray-400">+{todos.length - 4}개 더</p>
-            )}
-          </ul>
-        )}
-      </div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-700">
+          <BodyIcon />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[11px] text-emerald-700/70">오늘의 몸개선</span>
+          <span className="block text-base font-semibold text-emerald-900">식단과 운동 목표 확인하기</span>
+        </span>
+        <span className="shrink-0 text-xl text-emerald-400">›</span>
+      </button>
     </div>
   )
 }

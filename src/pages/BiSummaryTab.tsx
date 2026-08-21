@@ -14,7 +14,7 @@ const SHIFT_LABELS: Record<ShiftType, string> = {
 
 const SHIFT_COLORS: Record<ShiftType, string> = {
   day: '#f59e0b',
-  night: '#6366f1',
+  night: '#0f766e',
   off_after_night: '#a855f7',
   holiday: '#10b981',
 }
@@ -111,7 +111,7 @@ export default function BiSummaryTab() {
           <>
             <div className="grid grid-cols-3 gap-2 mb-3">
               <StatCard label="단백질 충분" value={String(proteinDays)} unit="일" color="#10b981" />
-              <StatCard label="탄수 범위" value={String(carbohydrateDays)} unit="일" color="#6366f1" />
+              <StatCard label="탄수 범위" value={String(carbohydrateDays)} unit="일" color="#16a34a" />
               <StatCard label="채소 목표" value={String(vegetableDays)} unit="일" color="#f59e0b" />
             </div>
             <div className="grid grid-cols-4 gap-1.5">
@@ -124,13 +124,13 @@ export default function BiSummaryTab() {
         )}
       </div>
       <div className="grid grid-cols-3 gap-2">
-        <StatCard label="운동 세션" value={String(weeklyWorkouts.length)} unit="회" color="#6366f1" />
+        <StatCard label="운동 세션" value={String(weeklyWorkouts.length)} unit="회" color="#16a34a" />
         <StatCard label="운동 시간" value={String(workoutMinutes)} unit="분" color="#10b981" />
         <StatCard label="공복 구간" value={String(fastingIntervals.length)} unit="회" color="#f59e0b" />
       </div>
       <div className="grid grid-cols-3 gap-2">
-        <StatCard label="평균 걸음" value={averageSteps > 0 ? averageSteps.toLocaleString() : '—'} unit={averageSteps > 0 ? '보' : ''} color="#6366f1" />
-        <StatCard label="평균 수면" value={averageSleepMinutes > 0 ? (averageSleepMinutes / 60).toFixed(1) : '—'} unit={averageSleepMinutes > 0 ? '시간' : ''} color="#8b5cf6" />
+        <StatCard label="평균 걸음" value={averageSteps > 0 ? averageSteps.toLocaleString() : '—'} unit={averageSteps > 0 ? '보' : ''} color="#16a34a" />
+        <StatCard label="평균 수면" value={averageSleepMinutes > 0 ? (averageSleepMinutes / 60).toFixed(1) : '—'} unit={averageSleepMinutes > 0 ? '시간' : ''} color="#0d9488" />
         <StatCard label="최근 체중" value={latestWeight == null ? '—' : latestWeight.toFixed(1)} unit={latestWeight == null ? '' : 'kg'} color="#10b981" />
       </div>
     </div>
@@ -208,7 +208,7 @@ export default function BiSummaryTab() {
               <div
                 key={dateStr}
                 className={`rounded-xl p-2 text-center border ${
-                  isToday ? 'border-indigo-300' : 'border-transparent'
+                  isToday ? 'border-emerald-300' : 'border-transparent'
                 } ${isFuture ? 'opacity-30' : ''}`}
                 style={{ background: shiftColor + '12' }}
               >
@@ -223,7 +223,7 @@ export default function BiSummaryTab() {
                 ) : (
                   <p className="text-base text-gray-200">—</p>
                 )}
-                {isToday && <p className="text-[9px] text-indigo-400 mt-0.5">오늘</p>}
+                {isToday && <p className="text-[9px] text-emerald-400 mt-0.5">오늘</p>}
                 {!isFuture && !isToday && <p className="text-[9px] text-gray-300 mt-0.5">{dayIndex + 1}일차</p>}
               </div>
             )
@@ -236,7 +236,7 @@ export default function BiSummaryTab() {
         <>
           <div className="grid grid-cols-3 gap-2">
             <StatCard label="핵심 달성일" value={String(achievedDays)} unit={`/ ${count}일`} color="#10b981" />
-            <StatCard label="운동 횟수" value={String(exerciseDays)} unit={`/ ${count}일`} color="#6366f1" />
+            <StatCard label="운동 횟수" value={String(exerciseDays)} unit={`/ ${count}일`} color="#16a34a" />
             <StatCard label="평균 점수" value={averageScore.toFixed(1)} unit="/ 5" color={averageScore >= 3 ? '#10b981' : '#ef4444'} />
           </div>
 
@@ -254,7 +254,7 @@ export default function BiSummaryTab() {
                   <span className="text-xs text-gray-400">{SHIFT_LABELS[log.shiftType]}</span>
                   <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${log.achieved ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                      className={`h-full rounded-full ${log.achieved ? 'bg-emerald-500' : 'bg-emerald-500'}`}
                       style={{ width: `${(log.score / 5) * 100}%` }}
                     />
                   </div>

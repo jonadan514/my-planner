@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+:root {
+  --app-bg: #eef7f0;
+  --app-surface: #ffffff;
+  --app-primary: #16a34a;
+  --app-primary-dark: #166534;
+  --app-primary-soft: #dcfce7;
+  --app-border: #d9eadf;
+}
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
@@ -15,8 +24,8 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: #f5f6fa;
-  color: #1a1a2e;
+  background: #e8f3eb;
+  color: #17352b;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
@@ -38,6 +47,9 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
+  background:
+    radial-gradient(circle at 100% 0%, rgb(187 247 208 / 45%), transparent 34%),
+    linear-gradient(180deg, #f7fcf8 0%, var(--app-bg) 100%);
 }
 
 .app-scroll {
@@ -53,7 +65,7 @@ input, select, textarea {
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: #86c99a; border-radius: 2px; }
 
 .page-enter {
   animation: fadeUp 0.2s ease;

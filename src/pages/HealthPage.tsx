@@ -19,7 +19,7 @@ export default function HealthPage() {
           <button
             onClick={() => setSub('fasting')}
             className={`flex-1 py-2.5 text-sm rounded-xl font-medium transition-colors ${
-              sub === 'fasting' ? 'bg-indigo-500 text-white' : 'text-gray-400'
+              sub === 'fasting' ? 'bg-emerald-500 text-white' : 'text-gray-400'
             }`}
           >
             ⏱ 단식
@@ -27,7 +27,7 @@ export default function HealthPage() {
           <button
             onClick={() => setSub('inbody')}
             className={`flex-1 py-2.5 text-sm rounded-xl font-medium transition-colors ${
-              sub === 'inbody' ? 'bg-indigo-500 text-white' : 'text-gray-400'
+              sub === 'inbody' ? 'bg-emerald-500 text-white' : 'text-gray-400'
             }`}
           >
             💪 인바디
@@ -35,7 +35,7 @@ export default function HealthPage() {
           <button
             onClick={() => setSub('workout')}
             className={`flex-1 py-2.5 text-sm rounded-xl font-medium transition-colors ${
-              sub === 'workout' ? 'bg-indigo-500 text-white' : 'text-gray-400'
+              sub === 'workout' ? 'bg-emerald-500 text-white' : 'text-gray-400'
             }`}
           >
             🏋️ 운동

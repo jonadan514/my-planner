@@ -42,25 +42,25 @@ export default function LiveAppGate({ children }: LiveAppGateProps) {
   if (state.status === 'ready') return children
 
   return (
-    <main className="min-h-screen bg-[#0f0f0f] px-6 text-white grid place-items-center">
-      <section className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/5 p-7 text-center shadow-2xl">
-        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-indigo-500 text-xl font-black">
+    <main className="grid min-h-screen place-items-center bg-gradient-to-b from-green-50 to-emerald-100 px-6 text-emerald-950">
+      <section className="w-full max-w-sm rounded-3xl border border-emerald-100 bg-white/85 p-7 text-center shadow-xl shadow-emerald-900/10 backdrop-blur">
+        <div className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-emerald-500 text-xl font-black">
           P
         </div>
         <h1 className="text-xl font-bold">Prec</h1>
         {state.status === 'error' ? (
           <>
-            <p className="mt-3 text-sm leading-6 text-white/70">{state.message}</p>
+            <p className="mt-3 text-sm leading-6 text-emerald-950/70">{state.message}</p>
             <button
               type="button"
               onClick={retry}
-              className="mt-6 w-full rounded-2xl bg-indigo-500 px-4 py-3 font-semibold transition hover:bg-indigo-400"
+              className="mt-6 w-full rounded-2xl bg-emerald-500 px-4 py-3 font-semibold transition hover:bg-emerald-400"
             >
               다시 시도
             </button>
           </>
         ) : (
-          <p className="mt-3 text-sm text-white/70">
+          <p className="mt-3 text-sm text-emerald-950/70">
             {state.status === 'switching' ? '최신 앱으로 전환하고 있습니다…' : '기록을 안전하게 준비하고 있습니다…'}
           </p>
         )}

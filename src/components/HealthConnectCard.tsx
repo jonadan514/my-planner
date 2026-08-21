@@ -60,7 +60,7 @@ export default function HealthConnectCard() {
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-4">
-      <div className="flex items-center justify-between mb-2"><p className="text-sm font-semibold text-gray-900">Samsung Health · Health Connect</p><button onClick={sync} disabled={busy} className="text-xs text-indigo-500 disabled:text-gray-300">{busy ? '동기화 중' : state.status === 'PERMISSION_REQUIRED' ? '건강 권한 연결' : state.status === 'PARTIAL' ? '추가 권한 연결' : '지금 동기화'}</button></div>
+      <div className="flex items-center justify-between mb-2"><p className="text-sm font-semibold text-gray-900">Samsung Health · Health Connect</p><button onClick={sync} disabled={busy} className="text-xs text-emerald-500 disabled:text-gray-300">{busy ? '동기화 중' : state.status === 'PERMISSION_REQUIRED' ? '건강 권한 연결' : state.status === 'PARTIAL' ? '추가 권한 연결' : '지금 동기화'}</button></div>
       <div className="flex flex-wrap gap-1.5">{VISIBLE_DATA_TYPES.map(type => <span key={type} className={`text-[10px] px-2 py-1 rounded-lg ${state.grantedDataTypes.includes(type) ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>{TYPE_LABELS[type]}</span>)}</div>
       <p className="text-[10px] text-gray-400 mt-2">마지막 동기화: {state.lastSuccessfulSyncAt ? new Date(state.lastSuccessfulSyncAt).toLocaleString() : '없음'}</p>
       {state.lastSuccessfulSyncAt && (

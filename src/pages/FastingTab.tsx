@@ -172,7 +172,7 @@ export default function FastingTab() {
               onClick={() => setGoalHours(g)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                 goalHours === g
-                  ? 'bg-indigo-500 text-white'
+                  ? 'bg-emerald-500 text-white'
                   : 'bg-white border border-gray-200 text-gray-500'
               }`}
             >
@@ -190,7 +190,7 @@ export default function FastingTab() {
             <circle
               cx="100" cy="100" r="90"
               fill="none"
-              stroke={progress >= 1 ? '#10b981' : '#6366f1'}
+              stroke={progress >= 1 ? '#15803d' : '#16a34a'}
               strokeWidth="12"
               strokeLinecap="round"
               strokeDasharray={circumference}
@@ -232,7 +232,7 @@ export default function FastingTab() {
                 setStartInput(format(new Date(active.startTime), "yyyy-MM-dd'T'HH:mm"))
                 setEditStartTime(v => !v)
               }}
-              className="text-xs text-indigo-500 border border-indigo-400/30 px-2 py-1 rounded-lg"
+              className="text-xs text-emerald-500 border border-emerald-400/30 px-2 py-1 rounded-lg"
             >
               수정
             </button>
@@ -245,7 +245,7 @@ export default function FastingTab() {
                 value={startInput}
                 onChange={e => setStartInput(e.target.value)}
               />
-              <button onClick={applyStartEdit} className="text-xs bg-indigo-500 text-white px-3 py-2 rounded-xl">
+              <button onClick={applyStartEdit} className="text-xs bg-emerald-500 text-white px-3 py-2 rounded-xl">
                 적용
               </button>
             </div>
@@ -265,7 +265,7 @@ export default function FastingTab() {
         className={`w-full py-4 rounded-2xl font-semibold text-lg transition-colors ${
           active
             ? 'bg-red-500/15 text-red-400 active:bg-red-500/25'
-            : 'bg-indigo-500 text-white active:bg-indigo-600'
+            : 'bg-emerald-500 text-white active:bg-emerald-600'
         }`}
       >
         {active ? '단식 종료' : '단식 시작'}
@@ -293,7 +293,7 @@ export default function FastingTab() {
                     <button
                       type="button"
                       onClick={() => editingRecordId === r.id ? setEditingRecordId(null) : openRecordEdit(r)}
-                      className="rounded-lg px-2 py-1 text-xs text-indigo-500 active:bg-indigo-50"
+                      className="rounded-lg px-2 py-1 text-xs text-emerald-500 active:bg-emerald-50"
                     >수정</button>
                     <button
                       type="button"
@@ -344,7 +344,7 @@ export default function FastingTab() {
                         <button
                           type="button"
                           onClick={saveRecordEdit}
-                          className="flex-1 rounded-xl bg-indigo-500 py-2 text-xs font-semibold text-white"
+                          className="flex-1 rounded-xl bg-emerald-500 py-2 text-xs font-semibold text-white"
                         >저장</button>
                       </div>
                     </div>

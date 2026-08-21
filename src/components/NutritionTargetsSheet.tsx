@@ -115,7 +115,7 @@ export default function NutritionTargetsSheet({ current, onClose, onSaved }: Pro
         </div>
 
         {error ? <p className="text-xs text-red-500 mt-3" role="alert">{error}</p> : null}
-        <button onClick={save} className="mt-4 w-full py-3.5 rounded-xl bg-indigo-500 text-white font-semibold">
+        <button onClick={save} className="mt-4 w-full py-3.5 rounded-xl bg-emerald-500 text-white font-semibold">
           목표 저장
         </button>
       </div>

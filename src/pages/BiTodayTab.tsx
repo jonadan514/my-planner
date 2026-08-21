@@ -24,7 +24,7 @@ const SHIFT_LABELS: Record<ShiftType, string> = {
 
 const SHIFT_COLORS: Record<ShiftType, string> = {
   day: '#f59e0b',
-  night: '#6366f1',
+  night: '#0f766e',
   off_after_night: '#a855f7',
   holiday: '#10b981',
 }
@@ -311,7 +311,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
           />
           <button
             onClick={saveConfig}
-            className="w-full py-3 rounded-xl bg-indigo-500 text-white font-semibold text-sm active:bg-indigo-600"
+            className="w-full py-3 rounded-xl bg-emerald-500 text-white font-semibold text-sm active:bg-emerald-600"
           >
             설정 완료
           </button>
@@ -354,7 +354,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
               value={editCycleStart}
               onChange={e => setEditCycleStart(e.target.value)}
             />
-            <button onClick={saveConfig} className="px-3 py-2 bg-indigo-500 text-white rounded-xl text-xs font-semibold">저장</button>
+            <button onClick={saveConfig} className="px-3 py-2 bg-emerald-500 text-white rounded-xl text-xs font-semibold">저장</button>
             <button onClick={() => setShowCycleEdit(false)} className="px-3 py-2 bg-gray-100 text-gray-400 rounded-xl text-xs">취소</button>
           </div>
         ) : (
@@ -373,7 +373,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
           <p className="text-sm font-semibold text-gray-900">오늘 단백질</p>
           <div className="flex items-center gap-3">
             <button onClick={() => setShowProfile(true)} className="text-xs text-emerald-600">프로필</button>
-            <button onClick={() => setShowTargets(true)} className="text-xs text-indigo-500">목표 설정</button>
+            <button onClick={() => setShowTargets(true)} className="text-xs text-emerald-500">목표 설정</button>
           </div>
         </div>
         {targets ? (
@@ -381,7 +381,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
             <div className="grid grid-cols-3 gap-2 mb-3">
               <div><p className="text-[10px] text-gray-400">현재 섭취</p><p className="text-xl font-bold text-gray-900">{mealSummary?.totalProteinGrams ?? 0}g</p></div>
               <div><p className="text-[10px] text-gray-400">목표 밴드</p><p className="text-sm font-bold text-gray-700 mt-1">{targets.proteinMinGrams}~{targets.proteinMaxGrams ?? '∞'}g</p></div>
-              <div><p className="text-[10px] text-gray-400">남은 최소량</p><p className="text-sm font-bold text-indigo-600 mt-1">{Math.max(0, targets.proteinMinGrams - (mealSummary?.totalProteinGrams ?? 0))}g</p></div>
+              <div><p className="text-[10px] text-gray-400">남은 최소량</p><p className="text-sm font-bold text-emerald-600 mt-1">{Math.max(0, targets.proteinMinGrams - (mealSummary?.totalProteinGrams ?? 0))}g</p></div>
             </div>
             <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, ((mealSummary?.totalProteinGrams ?? 0) / targets.proteinMinGrams) * 100)}%` }} />
@@ -397,7 +397,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
         )}
       </div>
 
-      <button onClick={onOpenMeals} className="w-full bg-indigo-500 text-white rounded-2xl px-4 py-3.5 flex items-center justify-between font-semibold text-sm">
+      <button onClick={onOpenMeals} className="w-full bg-emerald-500 text-white rounded-2xl px-4 py-3.5 flex items-center justify-between font-semibold text-sm">
         <span>빠른 식단 기록 / 프리셋</span><span>›</span>
       </button>
 
@@ -408,7 +408,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
             <p className="text-sm font-semibold text-gray-900">🍽 오늘 식단 현황</p>
             <button
               onClick={restoreAutomaticValues}
-              className="text-xs text-indigo-500 border border-indigo-400/30 px-2.5 py-1 rounded-lg active:bg-indigo-500/10"
+              className="text-xs text-emerald-500 border border-emerald-400/30 px-2.5 py-1 rounded-lg active:bg-emerald-500/10"
             >
               행동 자동 반영
             </button>
@@ -511,8 +511,8 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
           ))}
         </div>
 
-        <div className="bg-indigo-50 rounded-xl px-3 py-2.5 border border-indigo-100">
-          <p className="text-xs text-indigo-700 font-medium leading-relaxed">💡 {mealGuide.focus}</p>
+        <div className="bg-emerald-50 rounded-xl px-3 py-2.5 border border-emerald-100">
+          <p className="text-xs text-emerald-700 font-medium leading-relaxed">💡 {mealGuide.focus}</p>
         </div>
       </div>
 
@@ -526,14 +526,14 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
             }`}>
               {completedCount}/5
             </span>
-            <button onClick={restoreAutomaticValues} className="text-[11px] text-indigo-500">자동값 복원</button>
+            <button onClick={restoreAutomaticValues} className="text-[11px] text-emerald-500">자동값 복원</button>
           </div>
         </div>
 
         {/* 핵심 진행바 */}
         <div className="w-full h-1.5 bg-gray-100 rounded-full mb-4 overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-300 ${achieved ? 'bg-emerald-500' : 'bg-indigo-400'}`}
+            className={`h-full rounded-full transition-all duration-300 ${achieved ? 'bg-emerald-500' : 'bg-emerald-400'}`}
             style={{ width: `${(completedCount / TODAY_BEHAVIORS.length) * 100}%` }}
           />
         </div>
@@ -588,7 +588,7 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
         className={`w-full py-3.5 rounded-2xl font-semibold text-sm transition-colors ${
           saved
             ? 'bg-emerald-500 text-white'
-            : 'bg-indigo-500 text-white active:bg-indigo-600'
+            : 'bg-emerald-500 text-white active:bg-emerald-600'
         }`}
       >
         {saved ? '✓ 저장 완료' : '빠른 저장'}
