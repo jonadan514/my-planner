@@ -17,6 +17,7 @@ test('현재 개인 프로필에서 설정한 감량 목표를 추천한다', ()
     carbohydrateMinGrams: 130,
     carbohydrateMaxGrams: 180,
     vegetableTargetGrams: 500,
+    dietaryFiberTargetGrams: 30,
     exerciseMinutes: 30,
   })
 })

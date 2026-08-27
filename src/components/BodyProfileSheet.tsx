@@ -58,6 +58,7 @@ export default function BodyProfileSheet({ current, currentTargets, onClose, onS
     let targets: UserNutritionTargets | undefined
     if (applyRecommendation) {
       targets = {
+        ...currentTargets,
         id: currentTargets?.id,
         ...recommendation.targets,
         source: 'PROFILE_RECOMMENDATION',
@@ -103,6 +104,7 @@ export default function BodyProfileSheet({ current, currentTargets, onClose, onS
               <span>단백질 {recommendation.targets.proteinMinGrams}~{recommendation.targets.proteinMaxGrams}g</span>
               <span>탄수화물 {recommendation.targets.carbohydrateMinGrams}~{recommendation.targets.carbohydrateMaxGrams}g</span>
               <span>채소 {recommendation.targets.vegetableTargetGrams}g+</span>
+              <span>식이섬유 {recommendation.targets.dietaryFiberTargetGrams}g</span>
               <span>운동 {recommendation.targets.exerciseMinutes}분</span>
             </div>
           </div>

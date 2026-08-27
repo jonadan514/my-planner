@@ -6,6 +6,7 @@ import type {
   MealQualityType, NutritionSource, UserNutritionTargets,
 } from '../db/database'
 import NutritionTargetsSheet from '../components/NutritionTargetsSheet'
+import PersonalDietPlanTab from '../components/PersonalDietPlanTab'
 import {
   NUTRITION_SOURCE_LABELS,
   QUALITY_LABELS,
@@ -82,6 +83,34 @@ function GoalBar({ label, note, current, target, unit, met }: {
       <p className={`text-[11px] mt-1 font-medium ${met ? 'text-emerald-500' : 'text-amber-500'}`}>
         {met ? '✓ 목표 달성' : `↓ ${remaining}${unit} 더 필요`}
       </p>
+    </div>
+  )
+}
+
+function BandMetric({ label, current, min, max, unit }: {
+  label: string
+  current: number
+  min: number
+  max?: number
+  unit: string
+}) {
+  const status = current < min ? 'below' : max != null && current > max ? 'above' : 'target'
+  const statusText = status === 'below'
+    ? `${min - current}${unit} 부족`
+    : status === 'above' && max != null
+      ? `${current - max}${unit} 초과`
+      : '✓ 범위 내'
+  const tone = status === 'target' ? 'text-emerald-600' : 'text-amber-600'
+  return (
+    <div className="rounded-xl bg-gray-50 p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-[11px] text-gray-400">{label}</p>
+          <p className="mt-0.5 text-[10px] text-gray-400">목표 {min}{max != null ? `~${max}` : '+'}{unit}</p>
+        </div>
+        <p className="text-sm font-bold tabular-nums text-gray-800">{current}<span className="ml-0.5 text-[10px] font-normal text-gray-400">{unit}</span></p>
+      </div>
+      <p className={`mt-1.5 text-[10px] font-medium ${tone}`}>{statusText}</p>
     </div>
   )
 }
@@ -900,16 +929,36 @@ function RecordTab() {
             met={summary.vegetableGoalMet}
           />
 
-          {targets?.carbohydrateMinGrams != null ? (
+          {targets?.dietaryFiberTargetGrams != null ? (
             <GoalBar
-              label="탄수화물"
-              note={targets.carbohydrateMaxGrams ? `${targets.carbohydrateMinGrams}~${targets.carbohydrateMaxGrams}g 범위` : '최소 목표'}
-              current={summary.totalCarbohydrateGrams}
-              target={targets.carbohydrateMinGrams}
+              label="식이섬유"
+              note="이상 목표"
+              current={summary.totalDietaryFiberGrams}
+              target={targets.dietaryFiberTargetGrams}
               unit="g"
-              met={summary.carbRangeMet}
+              met={summary.dietaryFiberGoalMet}
+            />
+          ) : null}
+
+          {targets?.carbohydrateMinGrams != null ? (
+            <BandMetric
+              label="탄수화물"
+              current={summary.totalCarbohydrateGrams}
+              min={targets.carbohydrateMinGrams}
+              max={targets.carbohydrateMaxGrams}
+              unit="g"
             />
           ) : <RiceBar rice={summary.totalRiceCookedGrams} />}
+
+          {targets?.calorieMinKcal != null ? (
+            <BandMetric
+              label="열량"
+              current={Math.round(summary.totalCaloriesKcal)}
+              min={targets.calorieMinKcal}
+              max={targets.calorieMaxKcal}
+              unit="kcal"
+            />
+          ) : null}
 
           {/* 기타 체크 */}
           <div className="flex flex-wrap gap-2 pt-1 border-t border-gray-100">
@@ -942,11 +991,13 @@ function RecordTab() {
             <p className="text-xs font-semibold text-gray-500">일일 기준</p>
             {!targets ? <button onClick={() => setShowTargets(true)} className="text-xs text-emerald-500">기준 설정</button> : null}
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {([
+              { label: '열량', val: targets?.calorieMinKcal ? `${targets.calorieMinKcal}~${targets.calorieMaxKcal ?? '∞'}kcal` : '미설정', note: '하루 범위' },
               { label: '단백질', val: targets ? `${targets.proteinMinGrams}~${targets.proteinMaxGrams ?? '∞'}g` : '미설정', note: '실제 영양량' },
               { label: '채소', val: targets?.vegetableTargetGrams ? `${targets.vegetableTargetGrams}g+` : '미설정', note: '하루 누적' },
               { label: '탄수화물', val: targets?.carbohydrateMinGrams ? `${targets.carbohydrateMinGrams}~${targets.carbohydrateMaxGrams ?? '∞'}g` : '미설정', note: '적정 범위' },
+              { label: '식이섬유', val: targets?.dietaryFiberTargetGrams ? `${targets.dietaryFiberTargetGrams}g+` : '미설정', note: '이상 목표' },
             ]).map(({ label, val, note }) => (
               <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
                 <p className="text-[11px] text-gray-400 mb-1">{label}</p>
@@ -1280,25 +1331,26 @@ function PresetTab() {
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
-type MealSubTab = 'record' | 'reference' | 'preset'
+type MealSubTab = 'plan' | 'record' | 'reference' | 'preset'
+
+const MEAL_TABS: Array<{ id: MealSubTab; label: string }> = [
+  { id: 'plan',      label: '🎯 계획' },
+  { id: 'record',    label: '📝 기록' },
+  { id: 'reference', label: '📖 참고' },
+  { id: 'preset',    label: '⭐ 프리셋' },
+]
 
 export default function BiMealTab() {
-  const [sub, setSub] = useState<MealSubTab>('record')
-
-  const TABS: Array<{ id: MealSubTab; label: string }> = [
-    { id: 'record',    label: '📝 기록' },
-    { id: 'reference', label: '📖 참고' },
-    { id: 'preset',    label: '⭐ 프리셋' },
-  ]
+  const [sub, setSub] = useState<MealSubTab>('plan')
 
   return (
     <div className="px-4 pt-4 pb-8">
       <div className="flex gap-1 bg-gray-100 rounded-2xl p-1 mb-4">
-        {TABS.map(({ id, label }) => (
+        {MEAL_TABS.map(({ id, label }) => (
           <button
             key={id}
             onClick={() => setSub(id)}
-            className={`flex-1 py-2.5 text-xs rounded-xl font-medium transition-colors ${
+            className={`flex-1 py-2.5 text-[11px] rounded-xl font-medium transition-colors ${
               sub === id ? 'bg-emerald-500 text-white' : 'text-gray-400'
             }`}
           >
@@ -1307,6 +1359,7 @@ export default function BiMealTab() {
         ))}
       </div>
 
+      {sub === 'plan'      && <PersonalDietPlanTab />}
       {sub === 'record'    && <RecordTab />}
       {sub === 'reference' && <ReferenceTab />}
       {sub === 'preset'    && <PresetTab />}

@@ -9,11 +9,14 @@ interface Props {
 }
 
 interface FormState {
+  calorieMin: string
+  calorieMax: string
   proteinMin: string
   proteinMax: string
   carbohydrateMin: string
   carbohydrateMax: string
   vegetableTarget: string
+  dietaryFiberTarget: string
   exerciseMinutes: string
 }
 
@@ -23,11 +26,14 @@ function optionalNumber(value: string): number | undefined {
 
 export default function NutritionTargetsSheet({ current, onClose, onSaved }: Props) {
   const [form, setForm] = useState<FormState>(() => ({
+    calorieMin: current?.calorieMinKcal?.toString() ?? '',
+    calorieMax: current?.calorieMaxKcal?.toString() ?? '',
     proteinMin: current?.proteinMinGrams.toString() ?? '',
     proteinMax: current?.proteinMaxGrams?.toString() ?? '',
     carbohydrateMin: current?.carbohydrateMinGrams?.toString() ?? '',
     carbohydrateMax: current?.carbohydrateMaxGrams?.toString() ?? '',
     vegetableTarget: current?.vegetableTargetGrams?.toString() ?? '',
+    dietaryFiberTarget: current?.dietaryFiberTargetGrams?.toString() ?? '',
     exerciseMinutes: current?.exerciseMinutes?.toString() ?? '',
   }))
   const [error, setError] = useState('')
@@ -39,12 +45,18 @@ export default function NutritionTargetsSheet({ current, onClose, onSaved }: Pro
 
   const save = async () => {
     const proteinMin = Number(form.proteinMin)
+    const calorieMin = optionalNumber(form.calorieMin)
+    const calorieMax = optionalNumber(form.calorieMax)
     const proteinMax = optionalNumber(form.proteinMax)
     const carbohydrateMin = optionalNumber(form.carbohydrateMin)
     const carbohydrateMax = optionalNumber(form.carbohydrateMax)
 
     if (!Number.isFinite(proteinMin) || proteinMin <= 0) {
       setError('단백질 최소 목표를 입력해 주세요.')
+      return
+    }
+    if (calorieMin != null && calorieMax != null && calorieMax < calorieMin) {
+      setError('열량 상한은 최소 목표보다 커야 합니다.')
       return
     }
     if (proteinMax != null && proteinMax < proteinMin) {
@@ -59,11 +71,14 @@ export default function NutritionTargetsSheet({ current, onClose, onSaved }: Pro
     const now = Date.now()
     const next: UserNutritionTargets = {
       id: current?.id,
+      calorieMinKcal: calorieMin,
+      calorieMaxKcal: calorieMax,
       proteinMinGrams: proteinMin,
       proteinMaxGrams: proteinMax,
       carbohydrateMinGrams: carbohydrateMin,
       carbohydrateMaxGrams: carbohydrateMax,
       vegetableTargetGrams: optionalNumber(form.vegetableTarget),
+      dietaryFiberTargetGrams: optionalNumber(form.dietaryFiberTarget),
       exerciseMinutes: optionalNumber(form.exerciseMinutes),
       source: 'MANUAL',
       createdAt: current?.createdAt ?? now,
@@ -77,11 +92,14 @@ export default function NutritionTargetsSheet({ current, onClose, onSaved }: Pro
   }
 
   const fields: Array<{ key: keyof FormState; label: string; placeholder: string }> = [
+    { key: 'calorieMin', label: '열량 최소 (kcal)', placeholder: '예: 1800' },
+    { key: 'calorieMax', label: '열량 상한 (kcal)', placeholder: '예: 2000' },
     { key: 'proteinMin', label: '단백질 최소 (g) *', placeholder: '예: 90' },
     { key: 'proteinMax', label: '단백질 상한 (g)', placeholder: '예: 120' },
     { key: 'carbohydrateMin', label: '탄수화물 최소 (g)', placeholder: '예: 180' },
     { key: 'carbohydrateMax', label: '탄수화물 상한 (g)', placeholder: '예: 250' },
     { key: 'vegetableTarget', label: '채소 목표 (g)', placeholder: '예: 500' },
+    { key: 'dietaryFiberTarget', label: '식이섬유 목표 (g)', placeholder: '예: 30' },
     { key: 'exerciseMinutes', label: '운동 완료 기준 (분)', placeholder: '예: 30' },
   ]
 

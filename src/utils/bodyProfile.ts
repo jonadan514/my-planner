@@ -5,7 +5,7 @@ export interface RecommendedTargets {
   targets: Pick<
     UserNutritionTargets,
     'proteinMinGrams' | 'proteinMaxGrams' | 'carbohydrateMinGrams' |
-    'carbohydrateMaxGrams' | 'vegetableTargetGrams' | 'exerciseMinutes'
+    'carbohydrateMaxGrams' | 'vegetableTargetGrams' | 'dietaryFiberTargetGrams' | 'exerciseMinutes'
   >
 }
 
@@ -32,6 +32,7 @@ export function recommendTargets(profile: Pick<
       carbohydrateMinGrams: Math.max(130, roundToFive(referenceWeightKg * carbMinMultiplier)),
       carbohydrateMaxGrams: Math.max(160, roundToFive(referenceWeightKg * carbMaxMultiplier)),
       vegetableTargetGrams: 500,
+      dietaryFiberTargetGrams: 30,
       exerciseMinutes: 30,
     },
   }

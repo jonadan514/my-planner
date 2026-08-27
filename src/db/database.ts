@@ -195,11 +195,14 @@ export interface HealthSyncState {
 
 export interface UserNutritionTargets {
   id?: number
+  calorieMinKcal?: number
+  calorieMaxKcal?: number
   proteinMinGrams: number
   proteinMaxGrams?: number
   carbohydrateMinGrams?: number
   carbohydrateMaxGrams?: number
   vegetableTargetGrams?: number
+  dietaryFiberTargetGrams?: number
   exerciseMinutes?: number
   source?: 'MANUAL' | 'PROFILE_RECOMMENDATION'
   profileUpdatedAt?: number
@@ -278,6 +281,7 @@ export interface DailyMealSummary {
   totalProteinGrams: number
   totalCarbohydrateGrams: number
   totalDietaryFiberGrams: number
+  totalCaloriesKcal: number
   proteinMealCount: number
   defenseSnackCount: number
   ultraProcessedCount: number
@@ -288,6 +292,8 @@ export interface DailyMealSummary {
   proteinGramsGoalMet: boolean      // 단백질 300g 이상 (g 기준)
   vegetableGoalMet: boolean
   carbRangeMet: boolean
+  calorieRangeMet: boolean
+  dietaryFiberGoalMet: boolean
   mealQualityMet: boolean
   fastingGoalMet: boolean           // 01시 이후 야식 없음
   sugaryDrinkCount: number
@@ -297,6 +303,8 @@ export interface DailyMealSummary {
   proteinStatus: NutritionStatus
   carbohydrateStatus: NutritionStatus
   vegetableStatus: NutritionStatus
+  calorieStatus: NutritionStatus
+  dietaryFiberStatus: NutritionStatus
 }
 
 function qualityOf(meal: MealLog): MealQualityType {
@@ -325,6 +333,7 @@ export function summarizeMeals(
   const totalProtein      = meals.reduce((s, m) => s + (m.proteinGrams ?? 0), 0)
   const totalCarbs        = meals.reduce((s, m) => s + (m.carbohydrateGrams ?? 0), 0)
   const totalFiber        = meals.reduce((s, m) => s + (m.dietaryFiberGrams ?? 0), 0)
+  const totalCalories     = meals.reduce((s, m) => s + (m.caloriesKcal ?? 0), 0)
   const proteinMeals      = meals.filter(m => m.proteinSource || m.proteinRawGrams || m.proteinCookedGrams).length
   const defenseSnacks     = meals.filter(m => m.isDefenseSnack).length
   const ultraProcessed    = meals.filter(m => m.isUltraProcessed).length
@@ -332,9 +341,13 @@ export function summarizeMeals(
   const qualities         = meals.map(qualityOf)
   const proteinStatus     = bandStatus(totalProtein, targets?.proteinMinGrams, targets?.proteinMaxGrams)
   const carbohydrateStatus = bandStatus(totalCarbs, targets?.carbohydrateMinGrams, targets?.carbohydrateMaxGrams)
+  const calorieStatus     = bandStatus(totalCalories, targets?.calorieMinKcal, targets?.calorieMaxKcal)
   const vegetableStatus   = targets?.vegetableTargetGrams == null
     ? 'NO_TARGET'
     : totalVeg >= targets.vegetableTargetGrams ? 'TARGET' : 'BELOW'
+  const dietaryFiberStatus = targets?.dietaryFiberTargetGrams == null
+    ? 'NO_TARGET'
+    : totalFiber >= targets.dietaryFiberTargetGrams ? 'TARGET' : 'BELOW'
   return {
     date: meals[0].date,
     totalRiceCookedGrams:    totalRice,
@@ -343,6 +356,7 @@ export function summarizeMeals(
     totalProteinGrams:       totalProtein,
     totalCarbohydrateGrams:  totalCarbs,
     totalDietaryFiberGrams:  totalFiber,
+    totalCaloriesKcal:       totalCalories,
     proteinMealCount:        proteinMeals,
     defenseSnackCount:       defenseSnacks,
     ultraProcessedCount:     ultraProcessed,
@@ -353,6 +367,8 @@ export function summarizeMeals(
     proteinGramsGoalMet: targets ? proteinStatus === 'TARGET' || proteinStatus === 'ABOVE' : false,
     vegetableGoalMet:    targets?.vegetableTargetGrams != null ? vegetableStatus === 'TARGET' : false,
     carbRangeMet:        targets?.carbohydrateMinGrams != null ? carbohydrateStatus === 'TARGET' : false,
+    calorieRangeMet:     targets?.calorieMinKcal != null ? calorieStatus === 'TARGET' : false,
+    dietaryFiberGoalMet: targets?.dietaryFiberTargetGrams != null ? dietaryFiberStatus === 'TARGET' : false,
     mealQualityMet:      ultraProcessed === 0,
     fastingGoalMet:      !nightAfter1am,
     sugaryDrinkCount:    qualities.filter(q => q === 'SUGARY_DRINK').length,
@@ -362,6 +378,8 @@ export function summarizeMeals(
     proteinStatus,
     carbohydrateStatus,
     vegetableStatus,
+    calorieStatus,
+    dietaryFiberStatus,
   }
 }
 
