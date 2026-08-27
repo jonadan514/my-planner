@@ -53,9 +53,9 @@ function PlanSection({ title, description, children, open = false }: {
 
 function TargetCard({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="rounded-xl bg-emerald-50 px-3 py-2.5">
+    <div className="min-w-0 rounded-xl bg-emerald-50 px-3 py-2.5">
       <p className="text-[10px] text-emerald-700/60">{label}</p>
-      <p className="mt-0.5 text-base font-bold text-emerald-900">{value}</p>
+      <p className="mt-0.5 whitespace-nowrap text-[15px] font-bold leading-tight text-emerald-900">{value}</p>
       {note ? <p className="mt-0.5 text-[9px] text-emerald-700/55">{note}</p> : null}
     </div>
   )
@@ -148,7 +148,7 @@ export default function PersonalDietPlanTab() {
           </div>
           {applied ? <span className="rounded-lg bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700">적용됨</span> : null}
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <TargetCard label="열량" value="1,800~2,000" note="kcal" />
           <TargetCard label="단백질" value="140~150g" />
           <TargetCard label="탄수화물" value="130~160g" />
