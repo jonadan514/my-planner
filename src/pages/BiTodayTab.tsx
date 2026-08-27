@@ -29,56 +29,6 @@ const SHIFT_COLORS: Record<ShiftType, string> = {
   holiday: '#10b981',
 }
 
-type MealGuideConfig = {
-  title: string
-  items: Array<{ label: string; time?: string; desc: string }>
-  portionNote: string[]
-  focus: string
-}
-
-const MEAL_GUIDES: Record<ShiftType, MealGuideConfig> = {
-  day: {
-    title: '주간 근무',
-    items: [
-      { label: '점심', time: '11:30 이전', desc: '단백질 + 채소 + 밥 130~150g' },
-      { label: '저녁', time: '20:00 이전', desc: '단백질 + 채소 + 밥 100~130g' },
-      { label: '간식', desc: '저녁 후 허기질 때만 방어간식 1회' },
-    ],
-    portionNote: ['밥: 눈대중 공기 1개 (과식 없게)', '단백질: 손바닥 크기 1회분', '채소: 한 가지 이상 챙기기'],
-    focus: '점심을 충분히 먹어 저녁 과식을 예방한다. 저녁은 점심보다 조금 적게.',
-  },
-  night: {
-    title: '야간 근무',
-    items: [
-      { label: '점심', time: '11:30~12:00', desc: '단백질 + 채소 + 밥 130~150g' },
-      { label: '저녁', time: '19:00 이전', desc: '단백질 + 채소 + 밥 100~130g' },
-      { label: '방어간식', time: '23:30~00:30', desc: '필요할 때만 1회 (무가당 두유·구이닭·그릭요거트)' },
-    ],
-    portionNote: ['밥: 저녁은 점심보다 조금 적게', '단백질: 점심·저녁 각 1회분', '채소: 의식적으로 챙기기'],
-    focus: '새벽에 배고픔이 올 수 있으니, 출근 전에 방어간식 1개를 미리 챙겨둔다.',
-  },
-  off_after_night: {
-    title: '비번 (야간 후 회복)',
-    items: [
-      { label: '점심', desc: '수면 후 몸이 회복된 다음 진행' },
-      { label: '저녁', desc: '평소 저녁 기준으로 가볍게 정리' },
-      { label: '간식', desc: '피곤함에서 오는 식욕이면 방어간식으로 대체' },
-    ],
-    portionNote: ['밥: 무리 말고 평소 수준으로', '단백질: 하루 2회 확보', '채소: 가능하면 챙기기'],
-    focus: '비번일은 회복이 먼저다. 식사는 거르지 말고, 부담 적은 방식으로 먹는다.',
-  },
-  holiday: {
-    title: '휴무일',
-    items: [
-      { label: '점심', desc: '평소 식사 시간대로' },
-      { label: '저녁', desc: '너무 늦지 않게 마무리' },
-      { label: '운동', desc: '걷기, 스트레칭, 근력 중 컨디션에 맞게 선택' },
-    ],
-    portionNote: ['밥: 눈대중 공기 1개 (과식 없게)', '단백질: 끼니당 1회분', '채소: 한 가지 이상 챙기기'],
-    focus: '가장 기록하기 좋은 날. 운동 습관 만들기에 가장 적합하다. 가볍게 30분 걷기부터.',
-  },
-}
-
 const TODAY_BEHAVIORS: Array<{ key: keyof DailyBehavior; label: string; sublabel: string }> = [
   { key: 'protein', label: '단백질 목표', sublabel: '식단 자동 판정' },
   { key: 'carbs', label: '탄수화물 범위', sublabel: '식단 자동 판정' },
@@ -321,8 +271,6 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
   }
 
   const shiftColor = SHIFT_COLORS[shiftType]
-  const mealGuide = MEAL_GUIDES[shiftType]
-
   return (
     <div className="px-4 pt-4 pb-8 space-y-4">
 
@@ -484,37 +432,6 @@ export default function BiTodayTab({ onOpenMeals }: Props) {
 
       <HealthConnectCard />
       <HealthSnapshotCard />
-
-      {/* 오늘 식사 가이드 */}
-      <div className="bg-white border border-gray-100 rounded-2xl p-4">
-        <p className="text-sm font-bold text-gray-900 mb-3">🍽 {mealGuide.title}</p>
-
-        <div className="space-y-2.5 mb-3">
-          {mealGuide.items.map((item, i) => (
-            <div key={i} className="flex items-start gap-2.5">
-              <span className="text-xs font-bold text-gray-800 bg-gray-200/70 rounded-lg px-2.5 py-1 shrink-0 text-center min-w-[52px]">
-                {item.label}
-              </span>
-              <div className="min-w-0 pt-0.5">
-                {item.time && (
-                  <p className="text-[11px] text-gray-500 font-semibold leading-none mb-0.5">{item.time}</p>
-                )}
-                <p className="text-sm text-gray-700 leading-snug">{item.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-gray-50 rounded-xl px-3 py-2.5 mb-2.5 space-y-1 border border-gray-100">
-          {mealGuide.portionNote.map((note, i) => (
-            <p key={i} className="text-xs text-gray-600 font-medium">{note}</p>
-          ))}
-        </div>
-
-        <div className="bg-emerald-50 rounded-xl px-3 py-2.5 border border-emerald-100">
-          <p className="text-xs text-emerald-700 font-medium leading-relaxed">💡 {mealGuide.focus}</p>
-        </div>
-      </div>
 
       {/* 행동 체크 */}
       <div className="bg-white border border-gray-100 rounded-2xl p-4">

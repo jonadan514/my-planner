@@ -1073,171 +1073,6 @@ function RecordTab() {
   )
 }
 
-// ─── Reference Tab (기존 참고 자료) ──────────────────────────────────────────
-
-const PROTEINS_REF = [
-  { id: 'chicken_breast', name: '닭가슴살',     raw: '200~220g', cooked: '150~170g', protein: '약 46~50g' },
-  { id: 'pork_shoulder',  name: '돼지 앞다리살', raw: '220~250g', cooked: '165~185g', protein: '약 40~45g' },
-  { id: 'pork_neck',      name: '돼지 목살',     raw: '180~200g', cooked: '140~155g', protein: '약 29~32g' },
-  { id: 'beef_chuck',     name: '쇠고기 목살',   raw: '190~220g', cooked: '145~165g', protein: '약 32~37g' },
-  { id: 'tofu_only',      name: '두부 단독',      raw: '400~450g', cooked: '거의 동일',  protein: '약 32~36g' },
-  { id: 'tofu_chicken',   name: '두부+닭',        raw: '두부 300g + 닭 100g', cooked: '두부 300g + 닭 약 75g', protein: '약 47g' },
-]
-
-const DEFENSE_SNACKS = [
-  { name: '무가당 두유 1팩 (190~200ml)', protein: '약 7~8g' },
-  { name: '삶은 달걀 1~2개',            protein: '약 6~12g' },
-  { name: '그릭요거트 100g (무가당)',   protein: '약 9~10g' },
-  { name: '단백질 팝칩 1봉',           protein: '약 10g' },
-  { name: '기타 (상황에 맞게)',         protein: '—' },
-]
-
-const TIMING_REF = [
-  {
-    shift: '주간 근무', color: '#f59e0b',
-    items: [
-      { time: '11:20', label: '점심 (권장 마감)' },
-      { time: '14:00', label: '카페인 마감' },
-      { time: '19:50', label: '저녁 (마지막 식사)' },
-      { time: '21:00', label: '일일 체크 알림' },
-    ],
-  },
-  {
-    shift: '야간 근무', color: '#0f766e',
-    items: [
-      { time: '18:50', label: '주 식사 (근무 전)' },
-      { time: '근무 중', label: '카페인: 이탈 전 금지' },
-      { time: '23:20', label: '배고프면 단백질 간식만' },
-      { time: '00:50', label: '큰 식사 마감' },
-    ],
-  },
-  {
-    shift: '비번', color: '#a855f7',
-    items: [
-      { time: '늦은 아침', label: '취침 후 가볍게' },
-      { time: '오후',     label: '수분 충분히 보충' },
-      { time: '저녁',     label: '단백질 위주 식사' },
-    ],
-  },
-  {
-    shift: '휴무', color: '#10b981',
-    items: [
-      { time: '아침', label: '단백질 식사 (평소 패턴)' },
-      { time: '점심', label: '채소 + 단백질 조합' },
-      { time: '저녁', label: '식사 타이밍 일정하게' },
-    ],
-  },
-]
-
-const COOKING_REF = [
-  { method: '샤부샤부', icon: '♨️', desc: '끓는 물에 살짝 데침. 가장 부드러운 식감.', tip: '5~10초 기준. 너무 오래 데치면 퍽퍽해짐.' },
-  { method: '전골',    icon: '🍲', desc: '다양한 채소와 함께 끓임.', tip: '채소는 나중에 넣어 아삭함 유지. 간 없이 담백하게.' },
-  { method: '찜',      icon: '🥦', desc: '수분을 유지해 촉촉한 식감. 영양 손실 적음.', tip: '닭가슴살: 중불 20~25분. 뚜껑 열지 말 것.' },
-  { method: '물볶음',  icon: '🥄', desc: '기름 없이 물로 볶음. 칼로리 최소화.', tip: '팬 먼저 달구고 물 2~3스푼. 눌어붙으면 물 추가.' },
-]
-
-type RefSubTab = 'protein' | 'timing' | 'cooking'
-
-function ReferenceTab() {
-  const [sub, setSub] = useState<RefSubTab>('protein')
-  const REF_TABS: Array<{ id: RefSubTab; label: string }> = [
-    { id: 'protein', label: '단백질' },
-    { id: 'timing',  label: '식사시간' },
-    { id: 'cooking', label: '조리법' },
-  ]
-
-  return (
-    <div className="space-y-3">
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-        {REF_TABS.map(({ id, label }) => (
-          <button
-            key={id}
-            onClick={() => setSub(id)}
-            className={`flex-1 py-2 text-xs rounded-lg font-medium transition-colors ${
-              sub === id ? 'bg-emerald-500 text-white' : 'text-gray-400'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {sub === 'protein' && (
-        <div className="space-y-2">
-          <p className="text-[11px] text-gray-400">조리 후 중량은 조리법·두께에 따라 달라질 수 있습니다. 단백질 함량은 1회분 기준 추정값입니다.</p>
-          {PROTEINS_REF.map(p => (
-            <div key={p.id} className="bg-white border border-gray-100 rounded-xl p-3.5">
-              <p className="text-gray-900 font-semibold text-sm mb-1.5">{p.name}</p>
-              <div className="flex gap-4 text-xs flex-wrap">
-                <div>
-                  <span className="text-gray-400 block mb-0.5">조리 전</span>
-                  <span className="text-gray-700">{p.raw}</span>
-                </div>
-                <div>
-                  <span className="text-gray-400 block mb-0.5">예상 조리 후</span>
-                  <span className="text-emerald-600">{p.cooked}</span>
-                </div>
-                <div>
-                  <span className="text-gray-400 block mb-0.5">단백질 함량</span>
-                  <span className="text-emerald-600 font-medium">{p.protein}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          <div className="bg-white border border-gray-100 rounded-xl p-3.5 mt-1">
-            <p className="text-gray-900 font-semibold text-sm mb-2">방어간식 5종</p>
-            <p className="text-[10px] text-gray-400 mb-2">허기·피로 유발 상황에서 큰 식사 대신 선택</p>
-            <div className="space-y-1.5">
-              {DEFENSE_SNACKS.map(s => (
-                <div key={s.name} className="flex items-baseline justify-between gap-2">
-                  <span className="text-xs text-gray-700">{s.name}</span>
-                  <span className="text-[11px] text-emerald-600 font-medium shrink-0">{s.protein}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {sub === 'timing' && (
-        <div className="space-y-3">
-          {TIMING_REF.map(t => (
-            <div key={t.shift} className="bg-white border border-gray-100 rounded-xl p-3.5">
-              <p className="font-semibold text-sm mb-2.5" style={{ color: t.color }}>{t.shift}</p>
-              <div className="space-y-2">
-                {t.items.map(item => (
-                  <div key={item.time} className="flex items-baseline gap-3">
-                    <span className="text-[11px] font-mono text-gray-400 w-16 shrink-0">{item.time}</span>
-                    <span className="text-sm text-gray-700">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {sub === 'cooking' && (
-        <div className="space-y-3">
-          {COOKING_REF.map(c => (
-            <div key={c.method} className="bg-white border border-gray-100 rounded-xl p-3.5">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xl">{c.icon}</span>
-                <p className="text-gray-900 font-semibold text-sm">{c.method}</p>
-              </div>
-              <p className="text-gray-500 text-xs mb-1.5">{c.desc}</p>
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
-                <p className="text-emerald-600 text-xs">💡 {c.tip}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── Preset Tab ───────────────────────────────────────────────────────────────
 
 function PresetTab() {
@@ -1331,12 +1166,11 @@ function PresetTab() {
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
-type MealSubTab = 'plan' | 'record' | 'reference' | 'preset'
+type MealSubTab = 'plan' | 'record' | 'preset'
 
 const MEAL_TABS: Array<{ id: MealSubTab; label: string }> = [
   { id: 'plan',      label: '🎯 계획' },
   { id: 'record',    label: '📝 기록' },
-  { id: 'reference', label: '📖 참고' },
   { id: 'preset',    label: '⭐ 프리셋' },
 ]
 
@@ -1361,7 +1195,6 @@ export default function BiMealTab() {
 
       {sub === 'plan'      && <PersonalDietPlanTab />}
       {sub === 'record'    && <RecordTab />}
-      {sub === 'reference' && <ReferenceTab />}
       {sub === 'preset'    && <PresetTab />}
     </div>
   )
