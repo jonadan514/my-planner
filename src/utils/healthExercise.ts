@@ -20,9 +20,9 @@ const WEIGHT_PATTERN = /근력|웨이트|기구\s*운동|머신|벤치|프레스
 export function classifyHealthExercise(exercise: HealthExerciseDescriptor): ImportedExerciseClassification | undefined {
   const sourceName = exercise.unit?.trim() ?? ''
   const isRunning = exercise.exerciseKind === 'RUNNING'
-    || (exercise.exerciseKind == null && RUNNING_PATTERN.test(sourceName))
+    || RUNNING_PATTERN.test(sourceName)
   const isWeight = exercise.exerciseKind === 'WEIGHT'
-    || (exercise.exerciseKind == null && WEIGHT_PATTERN.test(sourceName))
+    || WEIGHT_PATTERN.test(sourceName)
 
   if (isRunning) {
     const runningType = exercise.runningType

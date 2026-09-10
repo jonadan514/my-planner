@@ -18,6 +18,7 @@ test('삼성헬스 웨이트 세션을 웨이트로 분류한다', () => {
 test('이전 APK 기록은 이름으로 보완 분류하고 다른 운동은 제외한다', () => {
   assert.equal(classifyHealthExercise({ unit: '트레드밀' })?.workoutKind, 'running')
   assert.equal(classifyHealthExercise({ unit: '근력 운동' })?.workoutKind, 'weight')
+  assert.equal(classifyHealthExercise({ unit: '기구 운동', exerciseKind: 'OTHER' })?.workoutKind, 'weight')
   assert.equal(classifyHealthExercise({ unit: '실내 자전거', exerciseKind: 'OTHER' }), undefined)
   assert.equal(workoutKindLabel({ date: '2026-09-10', name: '웨이트 트레이닝', category: '자동 기록', createdAt: 1 }), '웨이트')
 })
