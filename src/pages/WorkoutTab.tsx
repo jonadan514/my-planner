@@ -43,6 +43,8 @@ export default function WorkoutTab() {
   const [duration, setDuration]       = useState('')
   const [distance, setDistance]       = useState('')
   const [memo, setMemo]               = useState('')
+  const [editingMemoId, setEditingMemoId] = useState<number>()
+  const [linkedMemo, setLinkedMemo] = useState('')
 
   const load = useCallback(
     () => db.workoutLogs.orderBy('createdAt').reverse().toArray(),
@@ -128,6 +130,20 @@ export default function WorkoutTab() {
   const keepDuplicateSeparate = async (automatic: WorkoutEntry) => {
     if (!automatic.id) return
     await db.workoutLogs.update(automatic.id, { duplicateCandidateId: undefined, duplicateDismissed: true })
+    await load().then(applyLoadedWorkouts)
+  }
+
+  const startEditingLinkedMemo = (entry: WorkoutEntry) => {
+    if (!entry.id) return
+    setEditingMemoId(entry.id)
+    setLinkedMemo(entry.memo ?? '')
+  }
+
+  const saveLinkedMemo = async () => {
+    if (!editingMemoId) return
+    await db.workoutLogs.update(editingMemoId, { memo: linkedMemo.trim() || undefined })
+    setEditingMemoId(undefined)
+    setLinkedMemo('')
     await load().then(applyLoadedWorkouts)
   }
 
@@ -310,6 +326,33 @@ export default function WorkoutTab() {
                         {e.averageHeartRate != null && ` · 평균 ${Math.round(e.averageHeartRate)}bpm`}
                         {e.memo && ` — ${e.memo}`}
                       </p>
+                      {e.origin === 'HEALTH_CONNECT' && workoutKindLabel(e) === '웨이트' ? (
+                        editingMemoId === e.id ? (
+                          <div className="mt-2 rounded-xl bg-gray-50 p-2.5">
+                            <label htmlFor={`linked-workout-memo-${e.id}`} className="block text-[10px] font-medium text-gray-500">
+                              운동 부위와 세트
+                            </label>
+                            <textarea
+                              id={`linked-workout-memo-${e.id}`}
+                              rows={2}
+                              maxLength={200}
+                              autoFocus
+                              value={linkedMemo}
+                              onChange={event => setLinkedMemo(event.target.value)}
+                              placeholder="예: 등 · 랫풀다운 3세트 · 시티드로우 3세트"
+                              className="mt-1.5 w-full resize-none rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-xs text-gray-800 outline-none focus:border-emerald-400"
+                            />
+                            <div className="mt-2 flex justify-end gap-2">
+                              <button type="button" onClick={() => { setEditingMemoId(undefined); setLinkedMemo('') }} className="rounded-lg px-3 py-1.5 text-[11px] text-gray-500">취소</button>
+                              <button type="button" onClick={() => void saveLinkedMemo()} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-[11px] font-semibold text-white">저장</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button type="button" onClick={() => startEditingLinkedMemo(e)} className="mt-2 text-[11px] font-medium text-emerald-600">
+                            {e.memo ? '메모 수정' : '+ 운동 부위·세트 메모'}
+                          </button>
+                        )
+                      ) : null}
                       {e.origin === 'HEALTH_CONNECT' && e.duplicateCandidateId ? (
                         <div className="mt-2 rounded-lg bg-amber-50 px-2.5 py-2">
                           <p className="text-[10px] text-amber-700">같은 날 수동 운동과 중복 가능성이 있습니다.</p>
