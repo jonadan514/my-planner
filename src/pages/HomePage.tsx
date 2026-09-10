@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db } from '../db/database'
+import RunningSchedule from '../components/RunningSchedule'
 import type { TabId } from '../App'
 import { getShiftForDate } from '../utils/shift'
 import type { FastingRecord, Event } from '../db/database'
@@ -73,6 +74,7 @@ export default function HomePage({ onNavigate }: Props) {
 
   return (
     <div className="page-enter px-4 pt-6 pb-4">
+      <RunningSchedule date={todayStr} />
       {/* 날짜 + 시간 헤더 */}
       <div className="flex items-start justify-between mb-7">
         <div>

@@ -70,6 +70,8 @@ export interface ShiftDay {
 }
 
 export interface WorkoutEntry {
+  runningType?: 'outdoor' | 'treadmill'
+  perceivedEffort?: 'easy' | 'moderate' | 'hard'
   id?: number
   date: string          // YYYY-MM-DD
   name: string          // e.g. "벤치프레스"
@@ -528,4 +530,17 @@ export class PlannerDB extends Dexie {
   }
 }
 
+export interface RunningPlan {
+  id?: number
+  date: string
+  kind: string
+  targetUnit: 'minutes' | 'km'
+  target: number
+  skipped?: boolean
+  substituteWorkoutId?: number
+  createdAt: number
+}
+
 export const db = new PlannerDB()
+db.version(10).stores({ runningPlans: '++id, &date, createdAt' })
+export const runningPlans = db.table<RunningPlan, number>('runningPlans')

@@ -4,7 +4,8 @@ import {
   eachDayOfInterval, isSameMonth, isToday, parseISO, addMonths, subMonths,
 } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { db } from '../db/database'
+import { db, runningPlans } from '../db/database'
+import RunningSchedule from '../components/RunningSchedule'
 import type { Event, ShiftConfig } from '../db/database'
 import { getShiftForDate } from '../utils/shift'
 import EventModal from '../components/EventModal'
@@ -20,20 +21,23 @@ export default function CalendarPage() {
   const [showModal, setShowModal] = useState(false)
   const [editEvent, setEditEvent] = useState<Event | null>(null)
   const [showShift, setShowShift] = useState(false)
+  const [runningDates, setRunningDates] = useState<string[]>([])
 
   const load = useCallback(async () => {
     const start = format(startOfMonth(viewDate), 'yyyy-MM-dd')
     const end   = format(endOfMonth(viewDate), 'yyyy-MM-dd')
-    const [nextEvents, nextShiftConfig] = await Promise.all([
+    const [nextEvents, nextShiftConfig, plans] = await Promise.all([
       db.events.where('date').between(start, end, true, true).toArray(),
       db.shiftConfigs.toCollection().last(),
+      runningPlans.where('date').between(start, end, true, true).toArray(),
     ])
-    return { nextEvents, nextShiftConfig: nextShiftConfig ?? null }
+    return { nextEvents, nextShiftConfig: nextShiftConfig ?? null, runningDates: plans.map(p => p.date) }
   }, [viewDate])
 
   const applyLoadedCalendar = useCallback((data: Awaited<ReturnType<typeof load>>) => {
     setEvents(data.nextEvents)
     setShiftConfig(data.nextShiftConfig)
+    setRunningDates(data.runningDates)
   }, [])
 
   useEffect(() => { void load().then(applyLoadedCalendar) }, [applyLoadedCalendar, load])
@@ -121,6 +125,7 @@ export default function CalendarPage() {
               }`}>
                 {format(day, 'd')}
               </span>
+              {runningDates.includes(ds) && <span className="text-[9px] text-emerald-700">러닝</span>}
               {shift && (
                 <span
                   className="text-[9px] font-bold px-1 rounded leading-[14px] mt-0.5"
@@ -155,7 +160,8 @@ export default function CalendarPage() {
           </button>
         </div>
 
-        {selectedEvents.length === 0 ? (
+        <RunningSchedule date={selected} />
+        {selectedEvents.length === 0 && !runningDates.includes(selected) ? (
           <p className="text-gray-300 text-sm py-4">일정이 없습니다</p>
         ) : (
           <ul className="space-y-2 pb-4">

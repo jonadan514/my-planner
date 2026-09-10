@@ -4,6 +4,7 @@ import type { WorkoutEntry } from '../db/database'
 import { format, parseISO } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import HealthConnectCard from '../components/HealthConnectCard'
+import RunningTab from './RunningTab'
 import { findWorkoutDuplicateCandidate } from '../utils/workoutDedup'
 
 const CATEGORIES = ['가슴', '등', '하체', '어깨', '팔', '유산소', '기타']
@@ -28,6 +29,7 @@ function groupByDate(entries: WorkoutEntry[]): DayGroup[] {
 }
 
 export default function WorkoutTab() {
+  const [view, setView] = useState<'all' | 'running'>('all')
   const [groups, setGroups]           = useState<DayGroup[]>([])
   const [showForm, setShowForm]       = useState(false)
   const [wType, setWType]             = useState<WorkoutType>('weight')
@@ -131,6 +133,11 @@ export default function WorkoutTab() {
       <div className="mb-3">
         <HealthConnectCard />
       </div>
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <button type="button" onClick={() => { setView('all'); void load().then(applyLoadedWorkouts) }} className={`rounded-xl py-3 text-sm ${view === 'all' ? 'bg-emerald-600 text-white' : 'bg-white'}`}>전체 운동</button>
+        <button type="button" onClick={() => setView('running')} className={`rounded-xl py-3 text-sm ${view === 'running' ? 'bg-emerald-600 text-white' : 'bg-white'}`}>🏃 러닝</button>
+      </div>
+      {view === 'running' ? <RunningTab /> : <>
 
       {/* 추가 버튼 */}
       <button
@@ -321,6 +328,7 @@ export default function WorkoutTab() {
           ))}
         </div>
       )}
+      </>}
     </div>
   )
 }

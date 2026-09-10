@@ -117,6 +117,9 @@ async function saveImportedRecord(record: Omit<HealthRecord, 'id' | 'createdAt' 
         )
     await db.workoutLogs.put({
       id: workout?.id,
+      runningType: workout?.runningType,
+      perceivedEffort: workout?.perceivedEffort,
+      memo: workout?.memo,
       ...automaticWorkout,
       distance: record.distanceKm,
       caloriesKcal: record.caloriesKcal,
