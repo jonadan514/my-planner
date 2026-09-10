@@ -3,6 +3,7 @@ import { Capacitor, registerPlugin } from '@capacitor/core'
 import { db } from '../db/database'
 import type { HealthDataType, HealthRecord, HealthSyncStatus } from '../db/database'
 import { findWorkoutDuplicateCandidate } from '../utils/workoutDedup'
+import { classifyHealthExercise } from '../utils/healthExercise'
 
 const DATA_TYPES: HealthDataType[] = ['EXERCISE', 'STEPS', 'SLEEP', 'WEIGHT', 'BODY_FAT']
 const AUTO_SYNC_INTERVAL_MS = 15 * 60 * 1000
@@ -101,10 +102,17 @@ async function saveImportedRecord(record: Omit<HealthRecord, 'id' | 'createdAt' 
   if (record.dataType === 'EXERCISE') {
     const workout = await db.workoutLogs.where('externalRecordId').equals(record.externalRecordId)
       .and(item => item.sourcePackage === record.sourcePackage).first()
+    const classification = classifyHealthExercise(record)
+    if (!classification) {
+      if (workout?.id && workout.linkedWorkoutId == null) await db.workoutLogs.delete(workout.id)
+      return
+    }
     const automaticWorkout = {
       date: record.date,
-      name: record.unit || 'Health Connect 운동',
-      category: '자동 기록',
+      name: classification.name,
+      category: classification.category,
+      workoutKind: classification.workoutKind,
+      runningType: classification.runningType,
       duration: record.durationMinutes,
       origin: 'HEALTH_CONNECT' as const,
       createdAt: workout?.createdAt ?? now,
@@ -117,7 +125,6 @@ async function saveImportedRecord(record: Omit<HealthRecord, 'id' | 'createdAt' 
         )
     await db.workoutLogs.put({
       id: workout?.id,
-      runningType: workout?.runningType,
       perceivedEffort: workout?.perceivedEffort,
       memo: workout?.memo,
       ...automaticWorkout,

@@ -6,6 +6,7 @@ import { ko } from 'date-fns/locale'
 import HealthConnectCard from '../components/HealthConnectCard'
 import RunningTab from './RunningTab'
 import { findWorkoutDuplicateCandidate } from '../utils/workoutDedup'
+import { workoutKindLabel } from '../utils/healthExercise'
 
 const CATEGORIES = ['가슴', '등', '하체', '어깨', '팔', '유산소', '기타']
 
@@ -74,10 +75,12 @@ export default function WorkoutTab() {
       category,
       createdAt: Date.now(),
       ...(wType === 'weight' ? {
+        workoutKind: 'weight' as const,
         sets:   sets   ? Number(sets)   : undefined,
         reps:   reps   ? Number(reps)   : undefined,
         weight: weight ? Number(weight) : undefined,
       } : {
+        workoutKind: /러닝|런닝|달리기|트레드밀|러닝머신/i.test(name.trim()) ? 'running' as const : undefined,
         duration: duration ? Number(duration) : undefined,
         distance: distance ? Number(distance) : undefined,
       }),
@@ -293,7 +296,7 @@ export default function WorkoutTab() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className={`text-[10px] px-2 py-0.5 rounded-md shrink-0 ${e.origin === 'HEALTH_CONNECT' ? 'bg-emerald-50 text-emerald-600' : 'bg-emerald-500/15 text-emerald-500'}`}>
-                          {e.origin === 'HEALTH_CONNECT' ? 'Samsung Health' : e.category}
+                          {e.origin === 'HEALTH_CONNECT' ? `Samsung Health · ${workoutKindLabel(e) ?? '운동'}` : e.category}
                         </span>
                         <span className="text-sm text-gray-900 font-medium truncate">{e.name}</span>
                       </div>

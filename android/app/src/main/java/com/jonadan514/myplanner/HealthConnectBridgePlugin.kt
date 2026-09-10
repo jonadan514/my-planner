@@ -191,6 +191,8 @@ class HealthConnectBridgePlugin : Plugin() {
                     put("endTime", session.endTime.toString())
                     put("lastModifiedTime", session.metadata.lastModifiedTime.toString())
                     put("unit", session.title?.takeIf { it.isNotBlank() } ?: exerciseName(session.exerciseType))
+                    put("exerciseKind", exerciseKind(session.exerciseType))
+                    runningType(session.exerciseType)?.let { put("runningType", it) }
                     put("durationMinutes", Duration.between(session.startTime, session.endTime).toSeconds() / 60.0)
                     distance?.let { put("distanceKm", it) }
                     calories?.let { put("caloriesKcal", it) }
@@ -361,6 +363,20 @@ class HealthConnectBridgePlugin : Plugin() {
         ExerciseSessionRecord.EXERCISE_TYPE_WEIGHTLIFTING -> "웨이트 트레이닝"
         ExerciseSessionRecord.EXERCISE_TYPE_YOGA -> "요가"
         else -> "Samsung Health 운동"
+    }
+
+    private fun exerciseKind(exerciseType: Int): String = when (exerciseType) {
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING,
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING_TREADMILL -> "RUNNING"
+        ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING,
+        ExerciseSessionRecord.EXERCISE_TYPE_WEIGHTLIFTING -> "WEIGHT"
+        else -> "OTHER"
+    }
+
+    private fun runningType(exerciseType: Int): String? = when (exerciseType) {
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING -> "outdoor"
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING_TREADMILL -> "treadmill"
+        else -> null
     }
 
     private fun permissionsFor(dataTypes: Set<String>): Set<String> = buildSet {

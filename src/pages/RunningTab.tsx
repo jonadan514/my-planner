@@ -54,7 +54,7 @@ export default function RunningTab() {
   const saveRun = () => action(async () => {
     const duration = Number(minutes), km = distance ? Number(distance) : undefined
     if (!recordDate || !Number.isFinite(duration) || duration <= 0 || (km != null && (!Number.isFinite(km) || km <= 0))) throw new Error('운동시간과 거리는 0보다 큰 숫자로 입력해주세요.')
-    const entry: WorkoutEntry = { date: recordDate, name: runningType === 'outdoor' ? '야외 러닝' : '러닝머신', runningType, category: '유산소', duration, distance: km, origin: 'MANUAL', createdAt: Date.now() }
+    const entry: WorkoutEntry = { date: recordDate, name: runningType === 'outdoor' ? '야외 러닝' : '러닝머신', workoutKind: 'running', runningType, category: '러닝', duration, distance: km, origin: 'MANUAL', createdAt: Date.now() }
     const imported = workouts.filter(w => w.date === recordDate && w.origin === 'HEALTH_CONNECT')
     if (imported.some(w => isRunning(w) && findWorkoutDuplicateCandidate(w, [entry]))) throw new Error('비슷한 연동 기록이 있습니다. 전체 운동에서 확인 후 기록해주세요.')
     await db.workoutLogs.add(entry)

@@ -1,7 +1,7 @@
 import type { RunningPlan, WorkoutEntry } from '../db/database.ts'
 
 export function isRunning(workout: WorkoutEntry): boolean {
-  return !!workout.runningType || /러닝|런닝|달리기|트레드밀|트레드 밀|running|treadmill|jogging/i.test(workout.name)
+  return workout.workoutKind === 'running' || !!workout.runningType || /러닝|런닝|달리기|트레드밀|트레드 밀|running|treadmill|jogging/i.test(workout.name)
 }
 
 export function runningProgress(plan: RunningPlan, workouts: WorkoutEntry[]) {

@@ -70,6 +70,7 @@ export interface ShiftDay {
 }
 
 export interface WorkoutEntry {
+  workoutKind?: 'running' | 'weight'
   runningType?: 'outdoor' | 'treadmill'
   perceivedEffort?: 'easy' | 'moderate' | 'hard'
   id?: number
@@ -162,6 +163,7 @@ export type MealQualityType =
 export type NutritionStatus = 'BELOW' | 'TARGET' | 'ABOVE' | 'NO_TARGET' | 'UNKNOWN'
 export type DataOrigin = 'MANUAL' | 'HEALTH_CONNECT'
 export type HealthDataType = 'EXERCISE' | 'STEPS' | 'SLEEP' | 'WEIGHT' | 'BODY_FAT'
+export type HealthExerciseKind = 'RUNNING' | 'WEIGHT' | 'OTHER'
 export type HealthSyncStatus = 'IDLE' | 'SYNCING' | 'SUCCESS' | 'PARTIAL' | 'ERROR' | 'PERMISSION_REQUIRED' | 'UNAVAILABLE'
 
 export interface HealthRecord {
@@ -176,6 +178,8 @@ export interface HealthRecord {
   lastModifiedTime?: string
   value?: number
   unit?: string
+  exerciseKind?: HealthExerciseKind
+  runningType?: 'outdoor' | 'treadmill'
   durationMinutes?: number
   distanceKm?: number
   caloriesKcal?: number
